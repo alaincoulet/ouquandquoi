@@ -3,6 +3,7 @@
 // Contrôleur principal pour les activités (oùquandquoi.fr)
 // - Récupération filtrée des activités selon expiration (champ "when")
 // - Paramètre ?expired=true pour affichage admin des activités expirées
+// - Suppression d'une activité (DELETE)
 // - Compatible frontend existant (clé "activities" attendue)
 // ==========================================================
 
@@ -93,9 +94,32 @@ export async function getActivityById(req: Request, res: Response) {
   }
 }
 
+/**
+ * Supprime une activité par son _id Mongo natif
+ * DELETE /api/activities/:id
+ * Retourne : { message: "Activité supprimée." }
+ */
+export async function deleteActivity(req: Request, res: Response) {
+  try {
+    const id = req.params.id;
+    if (!id || id.length !== 24) {
+      return res.status(400).json({ error: "ID d'activité invalide." });
+    }
+    const activity = await Activity.findById(id);
+    if (!activity) {
+      return res.status(404).json({ error: "Activité non trouvée." });
+    }
+    await Activity.findByIdAndDelete(id);
+    res.json({ message: "Activité supprimée." });
+  } catch (err) {
+    console.error("Erreur deleteActivity:", err);
+    res.status(500).json({ error: "Erreur lors de la suppression de l'activité." });
+  }
+}
+
 // ==========================================================
 // Prêt pour extension : création, édition, suppression, upload images
 // Pour tout ajout de route, toujours respecter la convention :
-// - Retourner une clé de haut niveau ("activity" ou "activities")
+// - Retourner une clé de haut niveau ("activity", "activities" ou "message")
 // - Ne jamais exposer d'info sensible ni __v, ni password, etc.
 // ==========================================================
