@@ -1,0 +1,605 @@
+/* src/styles/index.css - Version enrichie pour oùquandquoi.fr */
+
+/* ========================================
+   IMPORTS EXTERNE - POLICES WEB
+   ======================================== */
+
+/* Police Quicksand pour une typographie moderne et accessible */
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
+
+/* ========================================
+   IMPORTS LIBRAIRIES CSS
+   ======================================== */
+
+/* Keen Slider pour les carrousels */
+@import 'keen-slider/keen-slider.min.css';
+
+/* ========================================
+   IMPORTS TAILWINDCSS - BASE DU DESIGN SYSTEM
+   ======================================== */
+
+/* Directives TailwindCSS essentielles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================
+   VARIABLES CSS PERSONNALISÉES
+   ======================================== */
+
+:root {
+  /* Palette de couleurs principale oùquandquoi.fr */
+  --color-primary: #3B82F6;     /* Bleu moderne et accessible */
+  --color-accent: #10B981;      /* Vert pour les actions positives */
+  --color-secondary: #6B7280;   /* Gris pour les textes secondaires */
+  --color-danger: #EF4444;      /* Rouge pour les erreurs */
+  --color-warning: #F59E0B;     /* Orange pour les alertes */
+  --color-success: #10B981;     /* Vert pour les succès */
+  
+  /* Typographie principale */
+  --font-quicksand: 'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  
+  /* Espacements harmonieux basés sur une échelle modulaire */
+  --spacing-xs: 0.25rem;    /* 4px */
+  --spacing-sm: 0.5rem;     /* 8px */
+  --spacing-md: 1rem;       /* 16px */
+  --spacing-lg: 1.5rem;     /* 24px */
+  --spacing-xl: 2rem;       /* 32px */
+  --spacing-2xl: 3rem;      /* 48px */
+  
+  /* Rayons de bordure cohérents */
+  --radius-sm: 0.25rem;     /* 4px */
+  --radius-md: 0.5rem;      /* 8px */
+  --radius-lg: 0.75rem;     /* 12px */
+  --radius-xl: 1rem;        /* 16px */
+  
+  /* Ombres pour la hiérarchie visuelle */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Variables pour le mode sombre (future évolution) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary: #60A5FA;   /* Bleu plus clair en mode sombre */
+    --color-accent: #34D399;    /* Vert plus vif en mode sombre */
+    --color-secondary: #9CA3AF; /* Gris plus clair en mode sombre */
+  }
+}
+
+/* ========================================
+   STYLES DE BASE POUR L'APPLICATION
+   ======================================== */
+
+@layer base {
+  /* Configuration globale avec la police Quicksand */
+  html {
+    font-family: var(--font-quicksand);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  /* Configuration du body pour l'application */
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: #f9fafb; /* gray-50 (sert de fallback si l'image ne charge pas) */
+    color: #1f2937; /* gray-800 */
+    min-height: 100vh;
+    min-height: 100dvh; /* pour support mobile */
+    font-feature-settings: 'kern' 1, 'liga' 1;
+
+    /* === FOND PUBLICITAIRE PARTENAIRE (niveau 1, fixe) === */
+    background-image: url('/pub_adrar.png');
+    background-size: auto;
+    /*background-repeat: repeat;*/
+    background-position: 0 0;
+    background-attachment: fixed;
+  }
+
+
+  /* Optimisation des titres avec Quicksand */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-quicksand);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.025em;
+  }
+
+  h1 { font-size: 2.5rem; font-weight: 700; }
+  h2 { font-size: 2rem; font-weight: 600; }
+  h3 { font-size: 1.5rem; font-weight: 600; }
+  h4 { font-size: 1.25rem; font-weight: 500; }
+  h5 { font-size: 1.125rem; font-weight: 500; }
+  h6 { font-size: 1rem; font-weight: 500; }
+
+  /* Amélioration de l'accessibilité pour les liens */
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+  }
+
+  a:hover {
+    color: #2563eb; /* blue-600 */
+    text-decoration: underline;
+  }
+
+  a:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Optimisation des images pour le responsive */
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-md);
+  }
+
+  /* Style des éléments de formulaire avec variables */
+  input, textarea, select, button {
+    font: inherit;
+    font-family: var(--font-quicksand);
+  }
+
+  /* Amélioration de l'accessibilité pour les éléments focusables */
+  *:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Configuration des scrollbars personnalisées */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: var(--radius-md);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-secondary);
+    border-radius: var(--radius-md);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary);
+  }
+}
+
+/* ========================================
+   COMPOSANTS PERSONNALISÉS AVEC QUICKSAND
+   ======================================== */
+
+@layer components {
+  /* Style de base pour les conteneurs principaux */
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4;
+    /* Responsive à la main car @apply ne prend pas sm: ou lg: */
+  }
+  @media (min-width: 640px) {
+    .container-custom {
+      padding-left: 1.5rem; /* sm:px-6 */
+      padding-right: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .container-custom {
+      padding-left: 2rem; /* lg:px-8 */
+      padding-right: 2rem;
+    }
+  }
+
+  /* Styles pour les cartes d'activité avec variables CSS */
+  .activity-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .activity-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+
+  /* Styles pour les boutons avec variables */
+  .btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-primary:hover {
+    background-color: #2563eb;
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-accent {
+    background-color: var(--color-accent);
+    color: white;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-accent:hover {
+    background-color: #059669;
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Styles pour les champs de formulaire avec Quicksand */
+  .form-input {
+    font-family: var(--font-quicksand);
+    display: block;
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid #d1d5db;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease-in-out;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+  }
+
+  .form-input:disabled {
+    background-color: #f9fafb;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  /* Messages d'erreur avec couleur personnalisée */
+  .error-message {
+    color: var(--color-danger);
+    font-size: 0.875rem;
+    margin-top: var(--spacing-xs);
+    display: flex;
+    align-items: center;
+    font-weight: 400;
+  }
+
+  /* Animations de chargement */
+  .loading-spinner {
+    animation: spin 1s linear infinite;
+    border-radius: 50%;
+    height: 1.5rem;
+    width: 1.5rem;
+    border: 2px solid #e5e7eb;
+    border-top-color: var(--color-primary);
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Styles pour les badges de catégorie avec variables */
+  .category-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-xl);
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-family: var(--font-quicksand);
+  }
+
+  .category-badge-music {
+    background-color: #f3e8ff;
+    color: #7c3aed;
+  }
+
+  .category-badge-culture {
+    background-color: #dbeafe;
+    color: var(--color-primary);
+  }
+
+  .category-badge-nature {
+    background-color: #d1fae5;
+    color: var(--color-accent);
+  }
+
+  .category-badge-food {
+    background-color: #fef3c7;
+    color: #d97706;
+  }
+
+  .category-badge-sport {
+    background-color: #fee2e2;
+    color: var(--color-danger);
+  }
+}
+
+/* ========================================
+   UTILITAIRES PERSONNALISÉS POUR OÙQUANDQUOI.FR
+   ======================================== */
+
+@layer utilities {
+  /* Utilitaires de typographie avec Quicksand */
+  .font-quicksand {
+    font-family: var(--font-quicksand);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Utilitaires pour limiter les lignes de texte */
+  .line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;                /* <-- Ajouté */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;                /* <-- Ajouté */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;                /* <-- Ajouté */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+
+  /* Utilitaires pour l'accessibilité */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Utilitaires de couleurs avec variables CSS */
+  .text-primary { color: var(--color-primary); }
+  .text-accent { color: var(--color-accent); }
+  .text-danger { color: var(--color-danger); }
+  .text-warning { color: var(--color-warning); }
+  .text-success { color: var(--color-success); }
+
+  .bg-primary { background-color: var(--color-primary); }
+  .bg-accent { background-color: var(--color-accent); }
+  .bg-danger { background-color: var(--color-danger); }
+
+  /* Utilitaires pour les transitions fluides */
+  .transition-smooth {
+    transition: all 0.3s ease-in-out;
+  }
+
+  .transition-fast {
+    transition: all 0.15s ease-in-out;
+  }
+
+  /* Styles pour les éléments avec indicateur de chargement */
+  .loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    backdrop-filter: blur(2px);
+  }
+
+  /* Utilitaires pour le responsive design mobile-first */
+  .mobile-padding {
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
+  }
+
+  @media (min-width: 640px) {
+    .mobile-padding {
+      padding-left: var(--spacing-lg);
+      padding-right: var(--spacing-lg);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .mobile-padding {
+      padding-left: var(--spacing-2xl);
+      padding-right: var(--spacing-2xl);
+    }
+  }
+}
+
+/* ========================================
+   STYLES SPÉCIFIQUES À OÙQUANDQUOI.FR
+   ======================================== */
+
+/* Styles pour la section hero avec gradient */
+.search-hero {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #8b5cf6 50%, var(--color-accent) 100%);
+  position: relative;
+}
+
+.search-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.search-hero > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Styles pour les cartes d'activité avec effet hover */
+.activity-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.activity-card-hover:hover {
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* Styles pour les favoris avec animation personnalisée */
+.favorite-icon {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.favorite-icon.active {
+  color: var(--color-danger);
+  animation: heartbeat 0.6s ease-in-out;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(1.05); }
+  75% { transform: scale(1.15); }
+}
+
+/* Styles pour l'indicateur de géolocalisation */
+.location-indicator {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.location-indicator::before {
+  content: '📍';
+  margin-right: var(--spacing-xs);
+}
+
+/* Animation d'apparition pour les résultats de recherche */
+.search-result {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   STYLES POUR L'IMPRESSION
+   ======================================== */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .activity-card {
+    border: 1px solid #d1d5db !important;
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-family: var(--font-quicksand);
+  }
+
+  a {
+    color: black !important;
+    text-decoration: underline !important;
+  }
+}
+
+/* ========================================
+   STYLES POUR LES PRÉFÉRENCES D'ACCESSIBILITÉ
+   ======================================== */
+
+/* Respect des préférences utilisateur pour les animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .activity-card-hover:hover {
+    transform: none !important;
+  }
+}
+
+/* Styles pour le contraste élevé */
+@media (prefers-contrast: high) {
+  .activity-card {
+    border: 2px solid #1f2937 !important;
+  }
+  
+  button, a {
+    border: 1px solid currentColor !important;
+  }
+
+  :root {
+    --color-primary: #1e40af;
+    --color-accent: #047857;
+  }
+}
+
+/* Adaptation pour les appareils à faible résolution */
+@media (max-resolution: 120dpi) {
+  body {
+    -webkit-font-smoothing: subpixel-antialiased;
+    -moz-osx-font-smoothing: auto;
+  }
+}
+
+/* ========================================
+   MASQUAGE SCROLLBAR HORIZONTALE POUR CAROUSEL
+   ======================================== */
+
+/* Masque la scrollbar horizontale des carrousels (cross-browser) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}

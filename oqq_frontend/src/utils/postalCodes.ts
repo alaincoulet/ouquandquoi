@@ -1,0 +1,138 @@
+// ==========================================================
+// FICHIER : src/utils/postalCodes.ts
+// 
+// Table des grandes villes françaises → code postal central + coordonnées GPS.
+// - Utilisé en fallback si Nominatim ne fournit pas d’adresse complète
+// - Coordonnées ≈ mairie ou centre-ville
+// - Exploité par les composants : FilterWherePanel, ActivityWherePanel
+// ==========================================================
+
+/**
+ * Informations associées à une ville principale.
+ * - Code postal principal (souvent mairie ou centre)
+ * - Coordonnées GPS approximatives
+ */
+export type CityPostalInfo = {
+  postcode: string
+  lat: number
+  lon: number
+}
+
+/**
+ * Table principale : ville → infos code postal + géolocalisation
+ */
+export const MAIN_CITY_POSTAL_CODES: Record<string, CityPostalInfo> = {
+  "Aix-en-Provence": { postcode: "13100", lat: 43.5297, lon: 5.4474 },
+  "Amiens": { postcode: "80000", lat: 49.8950, lon: 2.3026 },
+  "Angers": { postcode: "49000", lat: 47.4784, lon: -0.5632 },
+  "Annecy": { postcode: "74000", lat: 45.8992, lon: 6.1294 },
+  "Antibes": { postcode: "06600", lat: 43.5804, lon: 7.1251 },
+  "Argenteuil": { postcode: "95100", lat: 48.9472, lon: 2.2467 },
+  "Arles": { postcode: "13200", lat: 43.6766, lon: 4.6278 },
+  "Asnières-sur-Seine": { postcode: "92600", lat: 48.9141, lon: 2.2870 },
+  "Aubervilliers": { postcode: "93300", lat: 48.9129, lon: 2.3831 },
+  "Aulnay-sous-Bois": { postcode: "93600", lat: 48.9382, lon: 2.4940 },
+  "Avignon": { postcode: "84000", lat: 43.9493, lon: 4.8055 },
+  "Beauvais": { postcode: "60000", lat: 49.4320, lon: 2.0823 },
+  "Besançon": { postcode: "25000", lat: 47.2380, lon: 6.0256 },
+  "Béziers": { postcode: "34500", lat: 43.3442, lon: 3.2158 },
+  "Bordeaux": { postcode: "33000", lat: 44.8378, lon: -0.5792 },
+  "Boulogne-Billancourt": { postcode: "92100", lat: 48.8340, lon: 2.2399 },
+  "Bourges": { postcode: "18000", lat: 47.0810, lon: 2.3988 },
+  "Brest": { postcode: "29200", lat: 48.3904, lon: -4.4861 },
+  "Caen": { postcode: "14000", lat: 49.1829, lon: -0.3707 },
+  "Calais": { postcode: "62100", lat: 50.9513, lon: 1.8587 },
+  "Cannes": { postcode: "06400", lat: 43.5528, lon: 7.0174 },
+  "Cergy": { postcode: "95000", lat: 49.0369, lon: 2.0635 },
+  "Chalon-sur-Saône": { postcode: "71100", lat: 46.7833, lon: 4.8521 },
+  "Chambéry": { postcode: "73000", lat: 45.5646, lon: 5.9178 },
+  "Champigny-sur-Marne": { postcode: "94500", lat: 48.8166, lon: 2.5103 },
+  "Cholet": { postcode: "49300", lat: 47.0605, lon: -0.8794 },
+  "Clermont-Ferrand": { postcode: "63000", lat: 45.7772, lon: 3.0870 },
+  "Colmar": { postcode: "68000", lat: 48.0792, lon: 7.3585 },
+  "Courbevoie": { postcode: "92400", lat: 48.8967, lon: 2.2567 },
+  "Créteil": { postcode: "94000", lat: 48.7904, lon: 2.4556 },
+  "Dijon": { postcode: "21000", lat: 47.3220, lon: 5.0415 },
+  "Drancy": { postcode: "93700", lat: 48.9254, lon: 2.4459 },
+  "Dunkerque": { postcode: "59140", lat: 51.0380, lon: 2.3770 },
+  "Épinal": { postcode: "88000", lat: 48.1731, lon: 6.4493 },
+  "Évreux": { postcode: "27000", lat: 49.0261, lon: 1.1508 },
+  "Fréjus": { postcode: "83600", lat: 43.4332, lon: 6.7359 },
+  "Grenoble": { postcode: "38000", lat: 45.1885, lon: 5.7245 },
+  "Hyères": { postcode: "83400", lat: 43.1201, lon: 6.1296 },
+  "Issy-les-Moulineaux": { postcode: "92130", lat: 48.8241, lon: 2.2733 },
+  "Ivry-sur-Seine": { postcode: "94200", lat: 48.8135, lon: 2.3912 },
+  "La Rochelle": { postcode: "17000", lat: 46.1603, lon: -1.1511 },
+  "La Roche-sur-Yon": { postcode: "85000", lat: 46.6695, lon: -1.4264 },
+  "Le Blanc-Mesnil": { postcode: "93150", lat: 48.9382, lon: 2.4618 },
+  "Le Havre": { postcode: "76600", lat: 49.4939, lon: 0.1079 },
+  "Le Mans": { postcode: "72000", lat: 48.0061, lon: 0.1996 },
+  "Le Tampon": { postcode: "97430", lat: -21.2766, lon: 55.5216 },
+  "Levallois-Perret": { postcode: "92300", lat: 48.8939, lon: 2.2881 },
+  "Limoges": { postcode: "87000", lat: 45.8356, lon: 1.2625 },
+  "Lille": { postcode: "59000", lat: 50.6292, lon: 3.0573 },
+  "Lorient": { postcode: "56100", lat: 47.7480, lon: -3.3662 },
+  "Lyon": { postcode: "69001", lat: 45.7673, lon: 4.8343 },
+  "Mantes-la-Jolie": { postcode: "78200", lat: 48.9903, lon: 1.7103 },
+  "Marseille": { postcode: "13001", lat: 43.2965, lon: 5.3698 },
+  "Mérignac": { postcode: "33700", lat: 44.8326, lon: -0.6311 },
+  "Metz": { postcode: "57000", lat: 49.1193, lon: 6.1757 },
+  "Meaux": { postcode: "77100", lat: 48.9601, lon: 2.8775 },
+  "Melun": { postcode: "77000", lat: 48.5424, lon: 2.6606 },
+  "Montpellier": { postcode: "34000", lat: 43.6110, lon: 3.8777 },
+  "Montreuil": { postcode: "93100", lat: 48.8610, lon: 2.4435 },
+  "Mulhouse": { postcode: "68100", lat: 47.7508, lon: 7.3359 },
+  "Nancy": { postcode: "54000", lat: 48.6937, lon: 6.1844 },
+  "Nanterre": { postcode: "92000", lat: 48.8924, lon: 2.2060 },
+  "Nantes": { postcode: "44000", lat: 47.2184, lon: -1.5536 },
+  "Narbonne": { postcode: "11100", lat: 43.1839, lon: 3.0031 },
+  "Neuilly-sur-Seine": { postcode: "92200", lat: 48.8848, lon: 2.2686 },
+  "Nice": { postcode: "06000", lat: 43.7102, lon: 7.2620 },
+  "Nîmes": { postcode: "30000", lat: 43.8370, lon: 4.3601 },
+  "Noisy-le-Grand": { postcode: "93160", lat: 48.8491, lon: 2.5483 },
+  "Orléans": { postcode: "45000", lat: 47.9029, lon: 1.9093 },
+  "Pantin": { postcode: "93500", lat: 48.8945, lon: 2.4030 },
+  "Paris": { postcode: "75001", lat: 48.8590, lon: 2.3412 },
+  "Pau": { postcode: "64000", lat: 43.2951, lon: -0.3708 },
+  "Perpignan": { postcode: "66000", lat: 42.6986, lon: 2.8956 },
+  "Pessac": { postcode: "33600", lat: 44.8067, lon: -0.6413 },
+  "Poissy": { postcode: "78300", lat: 48.9291, lon: 2.0370 },
+  "Poitiers": { postcode: "86000", lat: 46.5802, lon: 0.3404 },
+  "Quimper": { postcode: "29000", lat: 47.9961, lon: -4.0963 },
+  "Reims": { postcode: "51100", lat: 49.2583, lon: 4.0317 },
+  "Rennes": { postcode: "35000", lat: 48.1173, lon: -1.6778 },
+  "Roubaix": { postcode: "59100", lat: 50.6927, lon: 3.1746 },
+  "Rouen": { postcode: "76000", lat: 49.4431, lon: 1.0993 },
+  "Rueil-Malmaison": { postcode: "92500", lat: 48.8761, lon: 2.1816 },
+  "Saint-André": { postcode: "97440", lat: -20.9637, lon: 55.6525 },
+  "Saint-Denis": { postcode: "93200", lat: 48.9362, lon: 2.3574 },
+  "Saint-Denis (La Réunion)": { postcode: "97400", lat: -20.8789, lon: 55.4481 },
+  "Saint-Étienne": { postcode: "42000", lat: 45.4397, lon: 4.3872 },
+  "Saint-Germain-en-Laye": { postcode: "78100", lat: 48.8967, lon: 2.0936 },
+  "Saint-Herblain": { postcode: "44800", lat: 47.2189, lon: -1.6622 },
+  "Saint-Malo": { postcode: "35400", lat: 48.6493, lon: -2.0257 },
+  "Saint-Nazaire": { postcode: "44600", lat: 47.2754, lon: -2.2137 },
+  "Saint-Paul": { postcode: "97460", lat: -21.0083, lon: 55.2715 },
+  "Saint-Pierre": { postcode: "97410", lat: -21.3394, lon: 55.4781 },
+  "Saint-Quentin": { postcode: "02100", lat: 49.8463, lon: 3.2875 },
+  "Sarcelles": { postcode: "95200", lat: 48.9974, lon: 2.3793 },
+  "Sète": { postcode: "34200", lat: 43.4074, lon: 3.6937 },
+  "Sevran": { postcode: "93270", lat: 48.9333, lon: 2.5333 },
+  "Strasbourg": { postcode: "67000", lat: 48.5734, lon: 7.7521 },
+  "Toulon": { postcode: "83000", lat: 43.1242, lon: 5.9280 },
+  "Toulouse": { postcode: "31000", lat: 43.6045, lon: 1.4442 },
+  "Tourcoing": { postcode: "59200", lat: 50.7239, lon: 3.1612 },
+  "Tours": { postcode: "37000", lat: 47.3941, lon: 0.6848 },
+  "Troyes": { postcode: "10000", lat: 48.2973, lon: 4.0744 },
+  "Valence": { postcode: "26000", lat: 44.9334, lon: 4.8924 },
+  "Valenciennes": { postcode: "59300", lat: 50.3570, lon: 3.5176 },
+  "Vénissieux": { postcode: "69200", lat: 45.6960, lon: 4.8881 },
+  "Versailles": { postcode: "78000", lat: 48.8049, lon: 2.1204 },
+  "Vichy": { postcode: "03200", lat: 46.1293, lon: 3.4231 },
+  "Vigneux-sur-Seine": { postcode: "91270", lat: 48.7008, lon: 2.4142 },
+  "Villejuif": { postcode: "94800", lat: 48.7940, lon: 2.3592 },
+  "Villeneuve-d'Ascq": { postcode: "59491", lat: 50.6239, lon: 3.1408 },
+  "Villeneuve-Saint-Georges": { postcode: "94190", lat: 48.7377, lon: 2.4498 },
+  "Villeurbanne": { postcode: "69100", lat: 45.7719, lon: 4.8902 },
+  "Vitry-sur-Seine": { postcode: "94400", lat: 48.7874, lon: 2.3923 }
+}

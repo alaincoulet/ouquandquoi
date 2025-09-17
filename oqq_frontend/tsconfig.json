@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    // Cible la version ECMAScript générée (ES2022 = moderne, OK pour Vite)
+    "target": "ES2022",
+
+    // Bibliothèques d’API à inclure (DOM = web, ES2022 = objets JS récents)
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+
+    // Module output (ESNext = modules modernes, adapté à Vite/React)
+    "module": "ESNext",
+
+    // Résolution des modules (Bundler = pour Vite)
+    "moduleResolution": "Bundler",
+
+    // Permet les imports raccourcis avec l’alias "@"
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
+    },
+
+    // TypeScript strict (recommandé pour la sécurité)
+    "strict": true,
+
+    // Type de JSX utilisé (react-jsx = nouvelle syntaxe React 17+)
+    "jsx": "react-jsx",
+
+    // Permet l’import des modules CommonJS/ESM via "import"
+    "esModuleInterop": true,
+
+    // Ne vérifie pas les types des dépendances node_modules (plus rapide)
+    "skipLibCheck": true,
+
+    // Refuse les différences de casse dans les noms de fichiers (robuste sur Windows)
+    "forceConsistentCasingInFileNames": true
+  },
+
+  // Inclut tous les fichiers TypeScript dans "src/"
+  "include": ["src"]
+}

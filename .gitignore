@@ -1,0 +1,62 @@
+# ==========================================================
+# .gitignore — Projet monorepo oùquandquoi.fr
+# Frontend (Vite/React/TS) + Backend (Express/MongoDB)
+# ==========================================================
+
+# ========== NODE & DÉPENDANCES ==========
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tsbuildinfo
+
+# ========== ENVIRONNEMENT ==========
+.env
+.env.*
+!.env.example
+
+# ========== BUILD & VITE ==========
+dist/
+.vite/
+*.local
+
+# ========== EXPORTS / RAPPORTS DEV / DONNÉES ==========
+dev_exports/
+arbo_frontend.txt
+arbo_backend.txt
+export_*.zip
+rapport_frontend.sh
+rapport_backend.sh
+
+# ========== LOGS / TESTS ==========
+logs/
+*.log
+*.snap
+*.spec.ts
+*.test.ts
+coverage/
+
+# ========== BACKEND DONNÉES INTERNES ==========
+oqq_backend/data/
+oqq_backend/scripts/
+
+# ========== UPLOADS IMAGES DYNAMIQUES BACKEND ==========
+oqq_backend/public/images/
+!oqq_backend/public/images/placeholder.png
+
+# ========== FICHIERS TEMPORAIRES / SYSTÈME / ÉDITEURS ==========
+*.png~
+*.jpg~
+*.jpeg~
+*.svg~
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

@@ -1,0 +1,30 @@
+{
+  "folders": [
+    {
+      "path": "oqq_backend"
+    },
+    {
+      "path": "oqq_frontend"
+    }
+  ],
+  "settings": {
+    "terminal.integrated.profiles.linux": {
+      "backend": {
+        "path": "bash",
+        "cwd": "${workspaceFolder:oqq_backend}"
+      },
+      "frontend": {
+        "path": "bash",
+        "cwd": "${workspaceFolder:oqq_frontend}"
+      }
+    },
+    "terminal.integrated.defaultProfile.linux": "frontend",
+    
+    "files.exclude": {
+      "**/.vscode": false
+    },
+
+    "editor.tokenColorCustomizations": {
+    }
+  }
+}

@@ -1,0 +1,30 @@
+<!--
+  404.html
+  Fallback pour hébergement OVH (Single Page Application).
+  Objectif :
+  - Quand un utilisateur accède à une URL interne directement (ex : /activity/123),
+    OVH sert ce fichier 404.html.
+  - Ce fichier charge la même application React (index.html) afin que le routage
+    client via React Router fonctionne.
+-->
+
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ouquandquoi.fr</title>
+    <meta name="description" content="Page introuvable - Redirection vers l'application" />
+    <script>
+      // Redirection automatique vers la racine pour SPA
+      sessionStorage.redirect = location.pathname + location.search + location.hash;
+      window.location.href = "/";
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <h1>Page introuvable</h1>
+      <p>Veuillez activer JavaScript pour continuer.</p>
+    </noscript>
+  </body>
+</html>
