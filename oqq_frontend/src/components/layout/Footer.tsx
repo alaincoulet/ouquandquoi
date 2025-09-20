@@ -1,15 +1,30 @@
 // ==========================================================
-// FICHIER : src/components/layout/Footer.tsx
-// Footer principal oùquandquoi.fr (version simplifiée)
-// - Largeur max-w-7xl, centré, fond blanc uniquement sur le container interne
-// - Bloc navigation supprimé (plus de "Découvrir", "Compte")
-// - Footer minimaliste : logo, description, liens légaux, copyright
+// FILE : src/components/layout/Footer.tsx
+// Main footer for oùquandquoi.fr (simplified version)
+// - Full-width flex with logo + tagline aligned with space-around
+// - Compact vertical spacing
+// - Legal links + copyright
 // ==========================================================
 
-import React from 'react'
-import Container from '@/components/layout/Container'
+import React from "react"
+import Container from "@/components/layout/Container"
+import { Link } from "react-router-dom"
+import logo from "@/assets/images/logo_oqq.png"
 
-const Footer = () => {
+const Footer: React.FC = () => {
+  // ==========================================================
+  // === STATE (useState, useEffect, useContext, etc.) =========
+  // ==========================================================
+  // No state required
+
+  // ==========================================================
+  // === BEHAVIOR (functions, callbacks, business logic) ======
+  // ==========================================================
+  // No logic required
+
+  // ==========================================================
+  // === RENDER (JSX mapping state => UI) ======================
+  // ==========================================================
   return (
     <footer className="border-t border-gray-200 mt-0">
       <Container
@@ -17,27 +32,30 @@ const Footer = () => {
         padding="md"
         className="rounded-b-2xl shadow-xl border border-gray-200 bg-gray-50"
       >
-        {/* Section principale */}
-        <div className="space-y-8">
-          {/* Logo et description */}
-          <div className="text-center">
-            <img 
-              src="/src/assets/images/logo-ouquandquoi.svg" 
-              alt="OùQuandQuoi"
-              className="h-8 w-auto mx-auto mb-4"
-            />
-            <p className="text-sm text-gray-600 max-w-xs mx-auto">
-              Découvrez les meilleures activités et événements près de chez vous
+        <div className="space-y-4">
+          {/* Logo + tagline with space-around */}
+          <div className="flex w-full justify-around items-center flex-wrap gap-3 text-center sm:text-left">
+            <Link
+              to="/"
+              className="flex items-center gap-2 group"
+              aria-label="Accueil oùquandquoi.fr"
+            >
+              <img
+                src={logo}
+                alt="Logo oùquandquoi.fr"
+                className="h-14 w-14 object-contain"
+              />
+              <span className="text-xl sm:text-2xl font-bold text-green-600 tracking-tight group-hover:underline transition">
+                oùquandquoi.fr
+              </span>
+            </Link>
+            <p className="text-xl sm:text-2xl font-bold text-green-600">
+              Le partenaire de votre temps libre...
             </p>
           </div>
 
-          {/* Réseaux sociaux (placeholder, à compléter si besoin) */}
-          <div className="flex justify-center space-x-6">
-            {/* ... SVG réseaux sociaux ... */}
-          </div>
-
-          {/* Liens légaux */}
-          <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-500">
+          {/* Legal links */}
+          <div className="flex flex-wrap justify-center gap-3 text-xs text-gray-500">
             <a href="/mentions-legales" className="hover:text-gray-700 transition-colors">
               Mentions légales
             </a>
@@ -53,9 +71,9 @@ const Footer = () => {
           </div>
 
           {/* Copyright */}
-          <div className="text-center pt-4 border-t border-gray-200">
+          <div className="text-center pt-2 border-t border-gray-200">
             <p className="text-xs text-gray-500">
-              © 2025 OùQuandQuoi. Tous droits réservés.
+              © 2025 OùQuandQuoi. All rights reserved.
             </p>
           </div>
         </div>

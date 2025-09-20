@@ -1,9 +1,9 @@
 // ==========================================================
-// FICHIER : src/components/layout/Header.tsx
-// Header principal sticky oùquandquoi.fr
-// - Filtres Où ? Quand ? Quoi ? intégrés inline (style Leboncoin)
-// - Menu horizontal CategoryNav sous le header (collé, sticky ensemble)
-// - Responsive et maintenable, aucun état global caché
+// FILE : src/components/layout/Header.tsx
+// Main sticky header for oùquandquoi.fr
+// - Inline filters Où ? Quand ? Quoi ?
+// - Horizontal category nav below header
+// - Rounded top corners for visual continuity with layout
 // ==========================================================
 
 import React, { useState } from 'react'
@@ -55,14 +55,16 @@ const Header: React.FC<HeaderProps> = ({
   onWhatChange,
   activitiesFiltered
 }) => {
-  // === 1. STATE (état local) ===
+  // ==========================================================
+  // === STATE ================================================
+  // ==========================================================
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeFilter, setActiveFilter] = useState<'where' | 'when' | 'what' | null>(null)
   const { user, isAuthenticated } = useAuth()
 
-  // === 2. COMPORTEMENTS (callbacks et logique) ===
-
-  // Helpers filtres
+  // ==========================================================
+  // === BEHAVIOR =============================================
+  // ==========================================================
   const formatAddressLabel = () => {
     if (!where.label) return 'Où ?'
     const city = where.location || ''
@@ -71,10 +73,6 @@ const Header: React.FC<HeaderProps> = ({
   }
   const whenLabel = !when || when === 'Toute l’année' ? 'Quand ?' : when
   const renderWhatLabel = () => value.keyword || 'Quoi ?'
-
-  const showWhereClear = !!where.label
-  const showWhenClear = !!when && when !== 'Toute l’année'
-  const showWhatClear = !!value.keyword
 
   const handleClick = (filter: 'where' | 'when' | 'what') =>
     setActiveFilter(prev => (prev === filter ? null : filter))
@@ -93,27 +91,26 @@ const Header: React.FC<HeaderProps> = ({
     onWhatChange({ ...value, keyword: '', excludedSubcategories: [] })
   }
 
-  // Burger menu mobile
   const toggleMenu = () => setMenuOpen(prev => !prev)
   const closeMenu = () => setMenuOpen(false)
 
-  // Sélection catégorie
   const handleCategorySelect = (category: string, subcategory?: string) => {
     onWhatChange({ keyword: '', category, subcategory })
     onNavigate?.('category', `/category/${category}`)
   }
 
-  // === 3. AFFICHAGE (rendu JSX) ===
+  // ==========================================================
+  // === RENDER ===============================================
+  // ==========================================================
   return (
     <>
-      {/* ===== HEADER PRINCIPAL ===== */}
+      {/* === STICKY HEADER BLOCK === */}
       <header
-        className="sticky top-0 z-30 bg-white transition-shadow"
+        className="sticky top-0 z-30 bg-white transition-shadow rounded-tl-2xl rounded-tr-2xl"
         style={{ minHeight: 70 }}
       >
-        {/* Conteneur limité en largeur et centré */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-4">
-          {/* === Bloc gauche : Logo + Burger (mobile) === */}
+          {/* === Logo + Burger === */}
           <div className="flex items-center flex-shrink-0 gap-2">
             <button
               onClick={toggleMenu}
@@ -140,10 +137,10 @@ const Header: React.FC<HeaderProps> = ({
             </Link>
           </div>
 
-          {/* === Filtres OÙ / QUAND / QUOI === */}
+          {/* === Filters OÙ / QUAND / QUOI === */}
           <div className="flex-1 flex justify-center">
             <div className="flex gap-2">
-              {/* Où ? */}
+              {/* Filter: Où ? */}
               <div className="relative">
                 <button
                   type="button"
@@ -157,7 +154,7 @@ const Header: React.FC<HeaderProps> = ({
                 >
                   <MapPinIcon className="w-5 h-5 mr-1 text-green-600" />
                   <span>{formatAddressLabel()}</span>
-                  {showWhereClear && (
+                  {where.label && (
                     <button
                       type="button"
                       aria-label="Effacer le filtre lieu"
@@ -177,7 +174,7 @@ const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
 
-              {/* Quand ? */}
+              {/* Filter: Quand ? */}
               <div className="relative">
                 <button
                   type="button"
@@ -186,12 +183,12 @@ const Header: React.FC<HeaderProps> = ({
                       ? 'border-green-500 bg-green-50'
                       : 'border-gray-200 bg-white'
                   } text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-green-400 transition`}
-                  aria-label="Filtrer par date/période"
+                  aria-label="Filtrer par date"
                   onClick={() => handleClick('when')}
                 >
                   <CalendarIcon className="w-5 h-5 mr-1 text-green-600" />
                   <span>{whenLabel}</span>
-                  {showWhenClear && (
+                  {when && when !== 'Toute l’année' && (
                     <button
                       type="button"
                       aria-label="Effacer le filtre date"
@@ -214,7 +211,7 @@ const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
 
-              {/* Quoi ? */}
+              {/* Filter: Quoi ? */}
               <div className="relative">
                 <button
                   type="button"
@@ -223,12 +220,12 @@ const Header: React.FC<HeaderProps> = ({
                       ? 'border-green-500 bg-green-50'
                       : 'border-gray-200 bg-white'
                   } text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-green-400 transition`}
-                  aria-label="Filtrer par mot-clé/catégorie"
+                  aria-label="Filtrer par mot-clé"
                   onClick={() => handleClick('what')}
                 >
                   <KeyIcon className="w-5 h-5 mr-1 text-green-600" />
                   <span>{renderWhatLabel()}</span>
-                  {showWhatClear && (
+                  {value.keyword && (
                     <button
                       type="button"
                       aria-label="Effacer le filtre mot-clé"
@@ -250,9 +247,8 @@ const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* === Boutons actions : Déposer, Favoris, Profil === */}
+          {/* === Actions: Déposer / Favoris / Profil === */}
           <div className="flex items-center gap-3">
-            {/* Déposer une activité */}
             <Link
               to="/deposer"
               onClick={() => onNavigate?.('deposer', '/deposer')}
@@ -262,7 +258,6 @@ const Header: React.FC<HeaderProps> = ({
               <span className="text-sm font-semibold">Déposer une activité</span>
             </Link>
 
-            {/* Favoris */}
             <button
               className="relative group focus:outline-none"
               aria-label={favoritesActive ? 'Voir toutes les activités' : 'Afficher mes favoris en premier'}
@@ -289,7 +284,6 @@ const Header: React.FC<HeaderProps> = ({
               </svg>
             </button>
 
-            {/* Profil */}
             <div className="flex items-center gap-2">
               <Link
                 to={isAuthenticated ? '/profil' : '/connexion'}
@@ -311,7 +305,7 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       </header>
 
-      {/* === Menu Mobile === */}
+      {/* === Mobile menu === */}
       <MobileMenu
         isOpen={menuOpen}
         onClose={closeMenu}
@@ -321,7 +315,7 @@ const Header: React.FC<HeaderProps> = ({
         onNavigate={onNavigate}
       />
 
-      {/* === CategoryNav sticky sous le header === */}
+      {/* === Category nav (horizontal) === */}
       <CategoryNav
         onSelect={handleCategorySelect}
         selected={value}
