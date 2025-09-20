@@ -22,27 +22,31 @@ function extractEndDate(when?: string): Date | undefined {
   if (!match) return undefined;
   const endDateStr = match[3] || match[1];
   const [day, month, year] = endDateStr.split("/").map(Number);
-  // Correction mois (0-indexé)
   return new Date(year, month - 1, day);
 }
 
 /**
  * Fonction utilitaire : détermine si une activité est expirée
  * - Expirée si la date du jour (à minuit) > date de fin (date+1j)
- * - Typée sur string | undefined (robuste, aucun avertissement TS)
+ * - Ajoute un LOG détaillé pour debug (affiche chaque activité évaluée)
  */
-function isExpiredActivity(when?: string): boolean {
+function isExpiredActivity(when?: string, id?: string): boolean {
   const endDate = extractEndDate(when);
-  if (!endDate) return false; // Pas de date = jamais expirée
-  // Date +1j (expirée dès lendemain)
+  if (!endDate) {
+    console.warn(`⛔ [Expiration] _id="${id}" | Champ when illisible :`, when);
+    return false;
+  }
   const endDatePlusOne = new Date(endDate);
   endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
 
-  // On compare à la date du jour (heure 0:00)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  return today >= endDatePlusOne;
+  const expired = today >= endDatePlusOne;
+  console.log(
+    `[Expiration] _id="${id}" | when="${when}" | endDate=${endDate.toISOString()} | today=${today.toISOString()} | expired=${expired}`
+  );
+  return expired;
 }
 
 /**
@@ -60,10 +64,14 @@ export async function getAllActivities(req: Request, res: Response) {
     let filteredActivities;
     if (expiredParam === "true") {
       // Mode admin : ne retourner QUE les expirées
-      filteredActivities = activities.filter(act => isExpiredActivity(act.when));
+      filteredActivities = activities.filter(act =>
+        isExpiredActivity(act.when, act._id?.toString())
+      );
     } else {
-      // Mode visiteur/utilisateur (expired absent ou "false") : que les non-expirées
-      filteredActivities = activities.filter(act => !isExpiredActivity(act.when));
+      // Mode visiteur/utilisateur : que les non-expirées
+      filteredActivities = activities.filter(act =>
+        !isExpiredActivity(act.when, act._id?.toString())
+      );
     }
 
     res.json({ activities: filteredActivities });
@@ -81,7 +89,6 @@ export async function getAllActivities(req: Request, res: Response) {
 export async function getActivityById(req: Request, res: Response) {
   try {
     const id = req.params.id;
-    // Vérifie que l'ID a bien 24 caractères (ObjectId MongoDB)
     if (!id || id.length !== 24) {
       return res.status(400).json({ error: "ID d'activité invalide." });
     }
@@ -117,9 +124,36 @@ export async function deleteActivity(req: Request, res: Response) {
   }
 }
 
+/**
+ * Crée une nouvelle activité (POST /api/activities)
+ * - Attend un FormData (clé "data" pour l'objet, "image" pour le fichier éventuel)
+ * - Retourne { activity }
+ */
+export async function addActivity(req: Request, res: Response) {
+  try {
+    let imageUrl;
+    if (req.file) {
+      imageUrl = `/images/${req.file.filename}`;
+    } else if (req.body.image) {
+      imageUrl = req.body.image;
+    }
+    let data = req.body;
+    if (typeof req.body.data === "string") {
+      data = JSON.parse(req.body.data);
+    }
+    const activity = new Activity({
+      ...data,
+      image: imageUrl,
+    });
+    await activity.save();
+    res.status(201).json({ activity });
+  } catch (err) {
+    console.error("Erreur addActivity:", err);
+    res.status(500).json({ error: "Erreur lors de la création de l'activité." });
+  }
+}
+
 // ==========================================================
-// Prêt pour extension : création, édition, suppression, upload images
-// Pour tout ajout de route, toujours respecter la convention :
-// - Retourner une clé de haut niveau ("activity", "activities" ou "message")
-// - Ne jamais exposer d'info sensible ni __v, ni password, etc.
+// Convention : clé de haut niveau ("activity", "activities" ou "message")
+// Jamais exposer d'info sensible ni __v, ni password, etc.
 // ==========================================================

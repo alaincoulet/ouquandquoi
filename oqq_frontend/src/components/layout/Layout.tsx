@@ -1,9 +1,9 @@
 // ==========================================================
-// FICHIER : src/components/layout/Layout.tsx
-// Layout principal oùquandquoi.fr
-// - Fond pub fixe couvrant tout l’écran
-// - Header sticky géré par StickyHeaderBlock
-// - Container central scrollable avec contenu + footer
+// FILE : src/components/layout/Layout.tsx
+// Main layout for oùquandquoi.fr
+// - Full-screen background with fixed pub
+// - Sticky header (via StickyHeaderBlock)
+// - Scrollable main container with content and footer
 // ==========================================================
 
 import React, { useRef } from 'react'
@@ -55,13 +55,19 @@ const Layout: React.FC<LayoutProps> = ({
   activitiesFiltered,
   onNavigate
 }) => {
-  // === 1. STATE (références) ===
+  // ==========================================================
+  // === STATE (references) ===================================
+  // ==========================================================
   const sentinelRef = useRef<HTMLDivElement>(null)
 
-  // === 2. COMPORTEMENT ===
-  // Aucun comportement ici, uniquement passage de props
+  // ==========================================================
+  // === BEHAVIOR =============================================
+  // ==========================================================
+  // No logic here, props are passed down to children
 
-  // === 3. AFFICHAGE ===
+  // ==========================================================
+  // === RENDER (main container with header and footer) =======
+  // ==========================================================
   return (
     <div
       className={`relative flex flex-col font-quicksand overflow-x-hidden ${className}`}
@@ -75,10 +81,10 @@ const Layout: React.FC<LayoutProps> = ({
         paddingBottom: '25vh',
       }}
     >
-      {/* SENTINELLE (placée sous la pub) */}
+      {/* Sentinel for sticky header trigger */}
       <div ref={sentinelRef} style={{ height: 10, width: '100%' }} />
 
-      {/* HEADER sticky (géré dans StickyHeaderBlock) */}
+      {/* Sticky header block */}
       <StickyHeaderBlock
         sentinelRef={sentinelRef}
         favoritesActive={favoritesActive}
@@ -93,7 +99,7 @@ const Layout: React.FC<LayoutProps> = ({
         onNavigate={onNavigate}
       />
 
-      {/* CONTAINER principal (scrollable) */}
+      {/* Main content container */}
       <div
         className="
           z-40
@@ -102,7 +108,8 @@ const Layout: React.FC<LayoutProps> = ({
           w-full
           max-w-7xl
           bg-gray-50
-          rounded-xl
+          rounded-bl-2xl
+          rounded-br-2xl
           shadow-xl
           border border-gray-200
         "

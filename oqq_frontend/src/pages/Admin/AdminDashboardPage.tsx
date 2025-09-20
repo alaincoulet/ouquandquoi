@@ -1,9 +1,9 @@
 // ==========================================================
-// FICHIER : src/pages/Admin/AdminDashboardPage.tsx
-// Dashboard d’administration centralisé oùquandquoi.fr
-// - Validation des comptes utilisateurs en attente
-// - Affichage des activités expirées (carrousel)
-// - Prêt à accueillir d’autres blocs de gestion admin
+// FILE: src/pages/Admin/AdminDashboardPage.tsx
+// Central admin dashboard for oùquandquoi.fr
+// - Validation of pending user accounts
+// - Display of expired activities (carousel)
+// - Ready for further admin features
 // ==========================================================
 
 import React, { useEffect, useState } from "react";
@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import Carousel from "@/components/ui/Carousel";
 import ProductCard from "@/components/molecules/ProductCard";
 import { Activity } from "@/types/activity";
+import { getExpiredActivities } from "@/config/api"; // Import API call
 
 interface PendingUser {
   _id: string;
@@ -27,26 +28,26 @@ export default function AdminDashboardPage() {
   const { user, token } = useAuth();
   const navigate = useNavigate();
 
-  // --- Gestion utilisateurs en attente ---
+  // --- Pending users management ---
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // --- Gestion activités expirées ---
+  // --- Expired activities management ---
   const [expiredActivities, setExpiredActivities] = useState<Activity[]>([]);
   const [loadingActivities, setLoadingActivities] = useState(true);
   const [errorActivities, setErrorActivities] = useState<string | null>(null);
 
-  // Redirection si non admin (sécurité front)
+  // Redirect if not admin (front-end security)
   useEffect(() => {
     if (!user || user.role !== "admin") {
       navigate("/");
     }
   }, [user, navigate]);
 
-  // Récupérer la liste des users pending au chargement
+  // Load pending users at mount
   useEffect(() => {
     if (!token) return;
     setLoadingUsers(true);
@@ -62,23 +63,21 @@ export default function AdminDashboardPage() {
       .finally(() => setLoadingUsers(false));
   }, [token]);
 
-  // Récupérer la liste des activités expirées (filtrage fait côté backend)
+  // Load expired activities at mount (now via API helper)
   useEffect(() => {
     if (!token) return;
     setLoadingActivities(true);
-    fetch("/api/activities?expired=true", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data?.message || "Erreur API activités");
-        setExpiredActivities(Array.isArray(data.activities) ? data.activities : []);
-      })
-      .catch((err) => setErrorActivities(err.message || "Erreur"))
+    getExpiredActivities()
+      .then((activities) => setExpiredActivities(activities))
+      .catch((err) =>
+        setErrorActivities(
+          err?.message || "Erreur lors de la récupération des activités expirées"
+        )
+      )
       .finally(() => setLoadingActivities(false));
   }, [token]);
 
-  // Handler validation user
+  // Handler for user validation
   const handleValidate = async (userId: string) => {
     setActionId(userId);
     setError(null);
@@ -109,7 +108,7 @@ export default function AdminDashboardPage() {
           Tableau de bord administrateur
         </h1>
 
-        {/* ----- Bloc : Utilisateurs en attente ----- */}
+        {/* ----- Block: Pending users ----- */}
         <section className="mb-12">
           <h2 className="text-xl font-semibold mb-4 text-blue-700 text-center">
             Validation des utilisateurs en attente
@@ -177,7 +176,7 @@ export default function AdminDashboardPage() {
           )}
         </section>
 
-        {/* ----- Bloc : Activités expirées ----- */}
+        {/* ----- Block: Expired activities ----- */}
         <section>
           <h2 className="text-xl font-semibold mb-4 text-red-700 text-center">
             Activités expirées ({expiredActivities.length})
@@ -205,7 +204,7 @@ export default function AdminDashboardPage() {
           )}
         </section>
 
-        {/* ----- Future blocs : Ajoutez ici d’autres gestions admin ----- */}
+        {/* ----- Future blocks: Add more admin features here ----- */}
       </div>
     </div>
   );

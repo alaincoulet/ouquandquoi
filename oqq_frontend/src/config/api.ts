@@ -46,10 +46,24 @@ api.interceptors.response.use(
 export const getActivities = async (): Promise<Activity[]> => {
   try {
     const response = await api.get('/api/activities')
-    // Si API retourne { activities: [...] } (standard REST), sinon adapte la ligne suivante :
     return response.data.activities ?? response.data
   } catch (error) {
     console.error('Erreur lors de la récupération des activités :', error)
+    return []
+  }
+}
+
+/**
+ * Récupère la liste des activités expirées (admin)
+ * GET /api/activities?expired=true
+ * Retour attendu : { activities: Activity[] }
+ */
+export const getExpiredActivities = async (): Promise<Activity[]> => {
+  try {
+    const response = await api.get('/api/activities?expired=true')
+    return response.data.activities ?? response.data
+  } catch (error) {
+    console.error('Erreur lors de la récupération des activités expirées :', error)
     return []
   }
 }
@@ -62,7 +76,6 @@ export const getActivities = async (): Promise<Activity[]> => {
 export const getActivityById = async (id: string): Promise<Activity | null> => {
   try {
     const response = await api.get(`/api/activities/${id}`)
-    // Si API retourne { activity: {...} } (standard REST), sinon adapte la ligne suivante :
     return response.data.activity ?? response.data
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'activité :', error)
