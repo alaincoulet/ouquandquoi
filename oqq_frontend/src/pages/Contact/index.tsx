@@ -1,83 +1,93 @@
-/**
- * Page de contact moderne pour oùquandquoi.fr
- * - Présente une illustration SVG "chat/message" en haut
- * - Formulaire accessible (nom, email, message)
- * - Layout épuré, adapté mobile/desktop, style Tailwind v3
- * - Prête à relier au backend (POST /api/contact à implémenter)
- * - Commentaires détaillés pour chaque bloc/fonction
- */
+// ==========================================================
+// FICHIER : src/pages/Contact/index.tsx
+// Page Contact oùquandquoi.fr (formulaire avec Layout global)
+// - Formulaire full-width + upload fichier (1 max, 5 Mo)
+// - Illustration supprimée, Layout unifié
+// ==========================================================
 
-import React, { useState, FormEvent } from "react";
+import React, { useState, FormEvent, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 
-// SVG moderne "chat/message" pour illustrer la page Contact
-const ContactIllustration = () => (
-  <svg
-    width="96"
-    height="96"
-    viewBox="0 0 96 96"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    aria-hidden="true"
-    className="mx-auto mb-4 drop-shadow-lg"
-  >
-    <rect x="8" y="20" width="80" height="50" rx="10" fill="#3b82f6" />
-    <rect x="14" y="28" width="68" height="34" rx="5" fill="white" />
-    <rect x="22" y="36" width="36" height="6" rx="3" fill="#dbeafe" />
-    <rect x="22" y="48" width="24" height="6" rx="3" fill="#dbeafe" />
-    <circle cx="72" cy="58" r="5" fill="#3b82f6" />
-    <path
-      d="M24 70 L40 66 Q44 72 56 66 L72 70"
-      stroke="#60a5fa"
-      strokeWidth="2"
-      fill="none"
-    />
-    <rect x="34" y="66" width="28" height="7" rx="3.5" fill="#fff" />
-    <rect x="37" y="69" width="22" height="1.5" rx="0.75" fill="#dbeafe" />
-  </svg>
-);
-
 export default function ContactPage() {
-  // État du formulaire
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
-  // Validation simple + gestion envoi (POST à intégrer plus tard)
+  // Gestion fichier (max 1 fichier, 5 Mo)
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (selected && selected.size > 5 * 1024 * 1024) {
+      alert("Le fichier dépasse 5 Mo.");
+      e.target.value = "";
+      setFile(null);
+    } else {
+      setFile(selected || null);
+    }
+  };
+
+  // Envoi simulé (placeholder)
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setStatus("sending");
     try {
-      // TODO: remplacer cette simulation par un vrai POST vers /api/contact
       await new Promise((res) => setTimeout(res, 1000));
       setStatus("sent");
       setName("");
       setEmail("");
       setMessage("");
-    } catch (err) {
+      setFile(null);
+    } catch {
       setStatus("error");
     }
   }
 
-  return (
-    <Layout>
-      {/* Conteneur principal, max largeur, centrage */}
-      <div className="min-h-[70vh] flex flex-col items-center justify-center py-8 px-2">
-        {/* Illustration SVG moderne */}
-        <ContactIllustration />
+  // Redirection intelligente via Layout
+  const handleRedirectToHome = (navId: string, href: string) => {
+    if (href !== "/") {
+      navigate(href);
+      return;
+    }
+    navigate("/", {
+      state: {
+        from: location.pathname,
+        redirectTriggered: true,
+      },
+    });
+  };
 
+  return (
+    <Layout
+      where={{ label: "", location: "", distance: undefined, lat: undefined, lon: undefined }}
+      onWhereChange={(val) =>
+        navigate("/", { state: { where: val, redirectTriggered: true } })
+      }
+      when=""
+      onWhenChange={(val) =>
+        navigate("/", { state: { when: val, redirectTriggered: true } })
+      }
+      value={{ keyword: "", category: undefined, subcategory: undefined, excludedSubcategories: [] }}
+      onWhatChange={(val) =>
+        navigate("/", { state: { what: val, redirectTriggered: true } })
+      }
+      onNavigate={handleRedirectToHome}
+    >
+      <div className="min-h-[70vh] flex flex-col items-center justify-center py-8 px-4">
         <h1 className="text-3xl font-bold text-gray-800 mb-2 text-center">
           Contactez-nous
         </h1>
-        <p className="text-gray-500 mb-6 text-center max-w-md">
+        <p className="text-gray-500 mb-6 text-center max-w-2xl">
           Une question, une suggestion, un souci ? Remplissez ce formulaire, nous vous répondrons rapidement.
         </p>
 
-        {/* Carte formulaire */}
         <form
           onSubmit={handleSubmit}
-          className="w-full max-w-md bg-white shadow-lg rounded-2xl px-6 py-8 flex flex-col gap-4"
+          className="w-full max-w-4xl bg-white shadow-lg rounded-2xl px-6 py-8 flex flex-col gap-4"
           aria-label="Formulaire de contact"
         >
           {/* Champ nom */}
@@ -91,7 +101,7 @@ export default function ContactPage() {
               className="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
               placeholder="Votre nom"
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               aria-required="true"
               autoComplete="name"
             />
@@ -108,7 +118,7 @@ export default function ContactPage() {
               className="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
               placeholder="ex: moi@email.fr"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               aria-required="true"
               autoComplete="email"
             />
@@ -124,11 +134,34 @@ export default function ContactPage() {
               className="mt-1 block w-full rounded-lg border border-gray-200 px-3 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none min-h-[96px]"
               placeholder="Expliquez-nous votre demande…"
               value={message}
-              onChange={e => setMessage(e.target.value)}
+              onChange={(e) => setMessage(e.target.value)}
               aria-required="true"
               maxLength={2000}
             />
           </label>
+
+          {/* Champ fichier (facultatif) */}
+          <div>
+            <label className="text-sm font-semibold text-gray-600">
+              Ajouter un fichier (PDF, image…)
+              <input
+                type="file"
+                accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                onChange={handleFileChange}
+                className="mt-1 block w-full text-sm text-gray-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-full file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-blue-50 file:text-blue-700
+                  hover:file:bg-blue-100"
+              />
+            </label>
+            {file && (
+              <div className="text-sm text-gray-600 mt-1">
+                Fichier sélectionné : <strong>{file.name}</strong>
+              </div>
+            )}
+          </div>
 
           {/* Bouton submit */}
           <button
@@ -140,7 +173,7 @@ export default function ContactPage() {
             {status === "sending" ? "Envoi…" : "Envoyer"}
           </button>
 
-          {/* Message retour utilisateur */}
+          {/* Messages retour */}
           {status === "sent" && (
             <div className="text-green-600 text-center text-sm mt-2">
               Merci, votre message a bien été envoyé !

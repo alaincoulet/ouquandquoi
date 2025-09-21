@@ -1,12 +1,47 @@
-// Page affichant la politique de confidentialité du site
+// ==========================================================
+// FICHIER : src/pages/confidentialite/index.tsx
+// Page Politique de confidentialité oùquandquoi.fr
+// - Sans logo, structurée comme CGU et Mentions légales
+// ==========================================================
 
-import React from "react";
+import React, { useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
-import { Link } from "react-router-dom"; // ✅ Import du composant Link pour navigation SPA
 
 export default function PolitiqueConfidentialite() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handler général pour renvoyer vers la home avec state
+  const handleRedirectToHome = (navId: string, href: string) => {
+    if (href !== "/") {
+      navigate(href);
+      return;
+    }
+    navigate("/", {
+      state: {
+        from: location.pathname,
+        redirectTriggered: true,
+      },
+    });
+  };
+
   return (
-    <Layout>
+    <Layout
+      where={{ label: "", location: "", distance: undefined, lat: undefined, lon: undefined }}
+      onWhereChange={(val) =>
+        navigate("/", { state: { where: val, redirectTriggered: true } })
+      }
+      when=""
+      onWhenChange={(val) =>
+        navigate("/", { state: { when: val, redirectTriggered: true } })
+      }
+      value={{ keyword: "", category: undefined, subcategory: undefined, excludedSubcategories: [] }}
+      onWhatChange={(val) =>
+        navigate("/", { state: { what: val, redirectTriggered: true } })
+      }
+      onNavigate={handleRedirectToHome}
+    >
       <div className="max-w-3xl mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-6">Politique de confidentialité</h1>
 
@@ -33,7 +68,8 @@ export default function PolitiqueConfidentialite() {
           Pour exercer vos droits, contactez-nous via la page{" "}
           <Link to="/contact" className="underline text-primary-600">
             Contact
-          </Link>.
+          </Link>{" "}
+          ou par email : <strong>contact@ouquandquoi.fr</strong>.
         </p>
 
         <p className="mt-8 text-sm text-gray-500">Dernière mise à jour : 30 juillet 2025</p>
