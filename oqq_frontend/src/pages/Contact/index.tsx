@@ -1,11 +1,11 @@
-// ==========================================================
-// FICHIER : src/pages/Contact/index.tsx
-// Page Contact oùquandquoi.fr (formulaire avec Layout global)
-// - Formulaire full-width + upload fichier (1 max, 5 Mo)
-// - Illustration supprimée, Layout unifié
-// ==========================================================
+/**
+ * src/pages/Contact/index.tsx
+ * Page Contact oùquandquoi.fr (formulaire avec Layout global)
+ * - Formulaire full-width + upload fichier (1 max, 5 Mo)
+ * - Illustration supprimée, Layout unifié
+ */
 
-import React, { useState, FormEvent, useEffect } from "react";
+import React, { useState, FormEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 
@@ -13,6 +13,7 @@ export default function ContactPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // === STATE ===
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -31,7 +32,7 @@ export default function ContactPage() {
     }
   };
 
-  // Envoi simulé (placeholder)
+  // Envoi simulé (placeholder, à relier à POST /api/contact)
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setStatus("sending");
@@ -61,6 +62,7 @@ export default function ContactPage() {
     });
   };
 
+  // === RENDER ===
   return (
     <Layout
       where={{ label: "", location: "", distance: undefined, lat: undefined, lon: undefined }}
@@ -106,7 +108,6 @@ export default function ContactPage() {
               autoComplete="name"
             />
           </label>
-
           {/* Champ email */}
           <label htmlFor="email" className="text-sm font-semibold text-gray-600">
             Votre email
@@ -123,7 +124,6 @@ export default function ContactPage() {
               autoComplete="email"
             />
           </label>
-
           {/* Champ message */}
           <label htmlFor="message" className="text-sm font-semibold text-gray-600">
             Message
@@ -139,7 +139,6 @@ export default function ContactPage() {
               maxLength={2000}
             />
           </label>
-
           {/* Champ fichier (facultatif) */}
           <div>
             <label className="text-sm font-semibold text-gray-600">
@@ -162,7 +161,6 @@ export default function ContactPage() {
               </div>
             )}
           </div>
-
           {/* Bouton submit */}
           <button
             type="submit"
@@ -172,7 +170,6 @@ export default function ContactPage() {
           >
             {status === "sending" ? "Envoi…" : "Envoyer"}
           </button>
-
           {/* Messages retour */}
           {status === "sent" && (
             <div className="text-green-600 text-center text-sm mt-2">

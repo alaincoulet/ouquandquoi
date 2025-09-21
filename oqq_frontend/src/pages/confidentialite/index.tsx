@@ -1,10 +1,11 @@
-// ==========================================================
-// FICHIER : src/pages/confidentialite/index.tsx
-// Page Politique de confidentialité oùquandquoi.fr
-// - Sans logo, structurée comme CGU et Mentions légales
-// ==========================================================
+/**
+ * src/pages/confidentialite/index.tsx
+ * Page affichant la politique de confidentialité du site oùquandquoi.fr
+ * - Respecte la structure globale (Layout, navigation)
+ * - Prête à être enrichie pour RGPD ou audit conformité
+ */
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 
