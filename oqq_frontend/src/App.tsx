@@ -42,6 +42,11 @@ import { parseDate, parseWhen, periodsOverlap } from "@/utils/date";
 import AdminFloatingButton from '@/components/atoms/AdminFloatingButton'
 import GeoFloatingButton from '@/components/atoms/GeoFloatingButton'
 
+// Legales
+import CGU from "@/pages/Legales/CGU";
+import MentionsLegales from "@/pages/Legales/MentionsLegales";
+
+
 /**
  * Interface du filtre "Où ?"
  * - Centralisée ici pour exposition aux pages enfants (Home, etc.)
@@ -319,6 +324,8 @@ const AppRoutes: React.FC = () => {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/mot-de-passe-oublie" element={<ResetPasswordPage />} />
           <Route path="/profil" element={<ProfilePage />} />
+          <Route path="/cgu" element={<CGU />} />
+          <Route path="/mentions-legales" element={<MentionsLegales />} />
           {/* === (Optionnel) Espace admin si protégé par route guard ailleurs === */}
           <Route path="/admin" element={<AdminDashboardPage />} />
         </Routes>

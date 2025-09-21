@@ -1,12 +1,25 @@
-// Page affichant la politique de confidentialité du site
+/**
+ * src/pages/confidentialite/index.tsx
+ * Page affichant la politique de confidentialité du site oùquandquoi.fr
+ * - Respecte la structure globale (Layout, props vides)
+ * - Prête à être enrichie pour RGPD ou audit conformité
+ */
 
 import React from "react";
 import Layout from "@/components/layout/Layout";
-import { Link } from "react-router-dom"; // ✅ Import du composant Link pour navigation SPA
+import { Link } from "react-router-dom";
 
 export default function PolitiqueConfidentialite() {
   return (
-    <Layout>
+    <Layout
+      where={{ label: "", location: "", distance: undefined, lat: undefined, lon: undefined }}
+      onWhereChange={(val: any) => {}}
+      when=""
+      onWhenChange={(val: any) => {}}
+      value={{ keyword: "", category: undefined, subcategory: undefined, excludedSubcategories: [] }}
+      onWhatChange={(val: any) => {}}
+      onNavigate={() => {}}
+    >
       <div className="max-w-3xl mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-6">Politique de confidentialité</h1>
 

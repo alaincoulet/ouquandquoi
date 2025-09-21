@@ -1,7 +1,7 @@
 // ==========================================================
 // FICHIER : src/components/activities/ActivityForm.tsx
-// Formulaire de dépôt/modification d'activité
-// - Centrage parfait du bloc boutons + image
+// Formulaire de dépôt/modification d'activité (oùquandquoi.fr)
+// - Compatible avec refonte "pages légales" (Layout)
 // ==========================================================
 
 import React, { useState, DragEvent, FormEvent, useEffect } from "react";
@@ -21,7 +21,7 @@ const mockUser = {
 };
 
 export default function ActivityForm() {
-  // === 1. STATE ===
+  // === ÉTAT (useState, useEffect, etc.) ===
   const locationRoute = useLocation();
   const searchParams = new URLSearchParams(locationRoute.search);
   const editId = searchParams.get('edit');
@@ -46,8 +46,7 @@ export default function ActivityForm() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // === 2. COMPORTEMENTS (handlers, effets, logique) ===
-
+  // === COMPORTEMENTS (handlers, logique, effets) ===
   useEffect(() => {
     if (!editId) return;
     fetch(`http://localhost:4000/api/activities/${editId}`)
@@ -147,22 +146,9 @@ export default function ActivityForm() {
     }
   }
 
-  // === 3. AFFICHAGE (render) ===
+  // === AFFICHAGE (render JSX) ===
   return (
-    <div className="w-full min-h-screen bg-[#FDF7F1] flex flex-col">
-      {/* Barre de titre */}
-      <div className="w-full flex items-center border-b border-[#F3E4D6] px-4 py-5 bg-[#FDF7F1]">
-        <h1 className="flex-1 text-2xl font-bold text-center">
-          {editId ? "Modifier une activité" : "Déposer une activité"}
-        </h1>
-        <button
-          className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-[#e3d7c9] text-2xl ml-2"
-          aria-label="Fermer"
-          onClick={() => navigate("/")}
-          type="button"
-        >&#10005;</button>
-      </div>
-
+    <div>
       {/* --- Bloc principal CENTRÉ (boutons colonne + image) --- */}
       <div className="w-full flex justify-center">
         <div className="flex flex-row items-start justify-center gap-12 mt-10 mb-10 max-w-4xl w-full">
@@ -274,6 +260,7 @@ export default function ActivityForm() {
         className="w-full max-w-6xl mx-auto flex flex-col gap-4 bg-[#FDF7F1] px-2 md:px-8"
         onSubmit={handleSubmit}
       >
+        {/* ... tout le reste du formulaire inchangé ... */}
         <div>
           <label className="block font-semibold mb-1" htmlFor="titre-activite">Titre de l’activité :</label>
           <input
@@ -396,7 +383,7 @@ export default function ActivityForm() {
             />
           </div>
         )}
-        {error && (
+                {error && (
           <div className="text-red-600 text-xs mt-1">{error}</div>
         )}
         <div className="flex items-center bg-white border-t border-[#E3DFDC] px-0 py-3 gap-3 mt-6 rounded">

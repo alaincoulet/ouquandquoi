@@ -1,10 +1,11 @@
 /**
+ * src/pages/Contact/index.tsx
  * Page de contact moderne pour oùquandquoi.fr
- * - Présente une illustration SVG "chat/message" en haut
+ * - Illustration SVG "chat/message" en haut
  * - Formulaire accessible (nom, email, message)
- * - Layout épuré, adapté mobile/desktop, style Tailwind v3
+ * - Layout homogène, Tailwind v3
  * - Prête à relier au backend (POST /api/contact à implémenter)
- * - Commentaires détaillés pour chaque bloc/fonction
+ * - Props Layout conformes (props obligatoires même pour page statique)
  */
 
 import React, { useState, FormEvent } from "react";
@@ -38,18 +39,18 @@ const ContactIllustration = () => (
 );
 
 export default function ContactPage() {
-  // État du formulaire
+  // === STATE ===
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
-  // Validation simple + gestion envoi (POST à intégrer plus tard)
+  // === BEHAVIOR ===
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setStatus("sending");
     try {
-      // TODO: remplacer cette simulation par un vrai POST vers /api/contact
+      // TODO: remplacer par un vrai POST vers /api/contact
       await new Promise((res) => setTimeout(res, 1000));
       setStatus("sent");
       setName("");
@@ -60,27 +61,30 @@ export default function ContactPage() {
     }
   }
 
+  // === RENDER ===
   return (
-    <Layout>
-      {/* Conteneur principal, max largeur, centrage */}
+    <Layout
+      where={{ label: "", location: "", distance: undefined, lat: undefined, lon: undefined }}
+      onWhereChange={(val: any) => {}}
+      when=""
+      onWhenChange={(val: any) => {}}
+      value={{ keyword: "", category: undefined, subcategory: undefined, excludedSubcategories: [] }}
+      onWhatChange={(val: any) => {}}
+      onNavigate={() => {}}
+    >
       <div className="min-h-[70vh] flex flex-col items-center justify-center py-8 px-2">
-        {/* Illustration SVG moderne */}
         <ContactIllustration />
-
         <h1 className="text-3xl font-bold text-gray-800 mb-2 text-center">
           Contactez-nous
         </h1>
         <p className="text-gray-500 mb-6 text-center max-w-md">
           Une question, une suggestion, un souci ? Remplissez ce formulaire, nous vous répondrons rapidement.
         </p>
-
-        {/* Carte formulaire */}
         <form
           onSubmit={handleSubmit}
           className="w-full max-w-md bg-white shadow-lg rounded-2xl px-6 py-8 flex flex-col gap-4"
           aria-label="Formulaire de contact"
         >
-          {/* Champ nom */}
           <label htmlFor="name" className="text-sm font-semibold text-gray-600">
             Votre nom
             <input
@@ -96,8 +100,6 @@ export default function ContactPage() {
               autoComplete="name"
             />
           </label>
-
-          {/* Champ email */}
           <label htmlFor="email" className="text-sm font-semibold text-gray-600">
             Votre email
             <input
@@ -113,8 +115,6 @@ export default function ContactPage() {
               autoComplete="email"
             />
           </label>
-
-          {/* Champ message */}
           <label htmlFor="message" className="text-sm font-semibold text-gray-600">
             Message
             <textarea
@@ -129,8 +129,6 @@ export default function ContactPage() {
               maxLength={2000}
             />
           </label>
-
-          {/* Bouton submit */}
           <button
             type="submit"
             className="mt-2 bg-blue-600 text-white font-bold py-2 px-4 rounded-xl shadow hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed"
@@ -139,8 +137,6 @@ export default function ContactPage() {
           >
             {status === "sending" ? "Envoi…" : "Envoyer"}
           </button>
-
-          {/* Message retour utilisateur */}
           {status === "sent" && (
             <div className="text-green-600 text-center text-sm mt-2">
               Merci, votre message a bien été envoyé !
