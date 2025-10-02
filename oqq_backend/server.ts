@@ -35,7 +35,7 @@ app.use(cors());
 app.use(express.json());
 
 // Sert les images statiques depuis /images/
-app.use("/images", express.static(path.join(__dirname, "public/images")));
+app.use("/images", express.static("/app/public/images"));
 
 // === ROUTES UTILISATEURS (MongoDB natif, favoris via _id) ===
 app.use("/api/users", userRoutes);
@@ -84,6 +84,4 @@ app.get("/api/health", (req, res) => {
 // ==== Lancement serveur ====
 app.listen(PORT, () => {
   console.log(`🚀 Serveur en ligne sur http://localhost:${PORT}`);
-  console.log("Nodemon actif");
 });
-
