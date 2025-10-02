@@ -1,24 +1,29 @@
-# ====================================================================
-# Chemin : oqq_frontend/Dockerfile
-# Rôle   : Image Docker frontend oùquandquoi.fr (Vite + Nginx)
-# ====================================================================
+# ==========================================================
+# === Dockerfile Frontend oùquandquoi.fr ===================
+# ==========================================================
 
-# Étape 1 : build du frontend
+# Étape 1 : Builder Vite
 FROM node:22-alpine AS builder
+
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci
 
 COPY . .
+
 RUN npm run build
 
-# Étape 2 : Nginx pour servir le frontend
+# Étape 2 : Serveur Nginx pour servir le build
 FROM nginx:stable-alpine
+
+RUN rm -rf /usr/share/nginx/html/*
+
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Optionnel : supprimer le fichier de config par défaut si conflit
-RUN rm /etc/nginx/conf.d/default.conf || true
+# ➕ Copier la config Nginx personnalisée
+COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
+
 CMD ["nginx", "-g", "daemon off;"]

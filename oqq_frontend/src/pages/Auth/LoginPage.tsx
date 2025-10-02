@@ -1,20 +1,21 @@
-/**
- * src/pages/Auth/LoginPage.tsx
- * 
- * Page de connexion utilisateur (oùquandquoi.fr)
- * - Utilise le contexte d’auth global (useAuth)
- * - Formulaire : email + mot de passe
- * - Icône œil (gérée via /components/atoms/Icon.tsx) dans le champ mot de passe
- * - Affichage temporaire du mot de passe tant que le clic est maintenu
- * - Appel API POST /api/users/login
- * - Gestion des états, erreurs, feedback utilisateur
- * - Redirection sécurisée via useEffect
- */
+// =====================================================================
+// FICHIER : src/pages/Auth/LoginPage.tsx
+// ---------------------------------------------------------------------
+// Page de connexion utilisateur pour oùquandquoi.fr
+// - Utilise le contexte d’auth global (useAuth)
+// - Appelle l’API via Axios configuré (import @/config/api)
+// - Respect de la structure 3 blocs (ÉTAT, COMPORTEMENT, AFFICHAGE)
+// =====================================================================
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import api from "@/config/api";
 import Icon from "@/components/atoms/Icon";
+
+// ==========================================================
+// === ÉTAT (useState, useEffect, useContext, etc.) =========
+// ==========================================================
 
 export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
@@ -23,8 +24,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
-  // État pour affichage temporaire du mot de passe
   const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
@@ -36,6 +35,10 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, navigate]);
 
+  // ==========================================================
+  // === COMPORTEMENT (fonctions, callbacks, logique métier) ===
+  // ==========================================================
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -43,32 +46,28 @@ export default function LoginPage() {
     setSuccess(false);
 
     try {
-      const res = await fetch("/api/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
+      const res = await api.post("/api/users/login", { email, password });
+      const data = res.data;
 
-      if (!res.ok) {
-        setError(data?.error || "Erreur de connexion.");
-        setLoading(false);
-        return;
-      }
-
-      // ATTENTION : le backend doit renvoyer user._id (et non id)
       login(data.token, data.user);
       setSuccess(true);
 
       setTimeout(() => {
         navigate("/");
       }, 1000);
-    } catch (err) {
-      setError("Erreur réseau ou serveur.");
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.error ||
+        "Erreur réseau ou serveur."
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  // ==========================================================
+  // === AFFICHAGE (rendu JSX, mapping état => UI) ============
+  // ==========================================================
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -99,7 +98,7 @@ export default function LoginPage() {
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                className="w-full rounded border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 pr-10" // pr-10 pour l'espace à droite
+                className="w-full rounded border border-gray-300 p-2 focus:ring-2 focus:ring-blue-500 pr-10"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -151,7 +150,10 @@ export default function LoginPage() {
           </a>
         </div>
         <div className="mt-4 text-center text-sm text-gray-500">
-          Pas encore de compte ? <a href="/register" className="text-blue-600 hover:underline">S’inscrire</a>
+          Pas encore de compte ?{" "}
+          <a href="/register" className="text-blue-600 hover:underline">
+            S’inscrire
+          </a>
         </div>
       </div>
     </div>
