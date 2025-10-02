@@ -1,4 +1,9 @@
+Voici ton **README.md** complet, à jour, professionnel, prêt à être utilisé sur GitHub ou dans n’importe quelle doc projet.
+Je l’ai restructuré : **Docker d’abord**, puis usage classique Node.js/NPM ensuite, pour coller à l’usage moderne d’un monorepo fullstack.
 
+---
+
+````markdown
 # oùquandquoi.fr – Fullstack Monorepo
 
 Plateforme complète pour découvrir, publier et réserver des activités locales (événements, loisirs, sorties) – France et Europe.
@@ -12,9 +17,9 @@ Plateforme complète pour découvrir, publier et réserver des activités locale
 
 ## Sommaire
 
-1. [Aperçu du projet](#aperçu-du-projet)
+1. [Démarrage rapide (Docker recommandé)](#démarrage-rapide-docker-recommandé)
 2. [Architecture & Stack](#architecture--stack)
-3. [Démarrage rapide](#démarrage-rapide)
+3. [Démarrage manuel (Node.js)](#démarrage-manuel-nodejs)
 4. [Scripts disponibles](#scripts-disponibles)
 5. [Variables d’environnement](#variables-denvironnement)
 6. [Bonnes pratiques](#bonnes-pratiques)
@@ -23,55 +28,90 @@ Plateforme complète pour découvrir, publier et réserver des activités locale
 
 ---
 
-## Aperçu du projet
+## 🚀 Démarrage rapide **(Docker recommandé)**
 
-oùquandquoi.fr centralise et rend accessibles toutes les activités et événements locaux, pour tous : habitants, touristes, familles, associations, entreprises, etc.  
-**Fonctionnalités principales :**
-- Recherche multi-critères : Où ? Quand ? Quoi ?
-- Inscription, authentification, favoris
-- Publication d’activités par les utilisateurs
-- Filtrage par distance, catégories, dates…
-- Mobile first & ultra rapide
+**Tout lancer (frontend + backend) en une seule commande** :
+
+```bash
+# À la racine du projet
+docker compose up --build
+````
+
+* **Frontend** : [http://localhost:8080](http://localhost:8080)
+* **API Backend** : [http://localhost:4000](http://localhost:4000)
+
+💡 **Astuce** :
+Utilise le script `startA.sh` pour lancer Docker *et* ouvrir les deux interfaces dans le navigateur automatiquement (nécessite bash sous Windows) :
+
+```bash
+./startA.sh
+```
+
+* **Arrêt des conteneurs** :
+
+  ```bash
+  docker compose down
+  ```
+
+**Pré-requis :**
+
+* Docker Desktop installé et démarré
+* MongoDB (Atlas/cloud ou local) accessible selon la variable `MONGO_URI` définie dans `/oqq_backend/.env`
+
+---
+
+### **Structure du projet avec Docker**
+
+```
+/docker-compose.yml        → Orchestration front/back
+/startA.sh                 → Script pour tout lancer (Docker + navigateurs)
+/rapport_projet_complet.sh → Script d’audit/export projet complet (txt)
+/oqq_frontend/Dockerfile   → Build/prod frontend (Vite+Nginx)
+/oqq_backend/Dockerfile    → Build backend (Node/TS)
+```
+
+#### **Ports exposés**
+
+* **Frontend** : [http://localhost:8080](http://localhost:8080)
+* **Backend** : [http://localhost:4000](http://localhost:4000)
 
 ---
 
 ## Architecture & Stack
 
 ```
-
-/oqq\_frontend   → Front React, Vite, TS, Tailwind, atomic design
-/oqq\_backend    → API REST Express, TS, MongoDB (Atlas/local)
+/oqq_frontend   → Front React, Vite, TS, Tailwind, atomic design
+/oqq_backend    → API REST Express, TS, MongoDB (Atlas/local)
 /.vscode        → Fichiers de config équipe/projet
 ouquandquoi.code-workspace → Workspace VS Code
 .gitignore      → Fichiers/dossiers ignorés (temp, build, .env, etc)
-
-````
+```
 
 ### Technologies principales
 
-- **Frontend** : React 18, Vite, TypeScript, TailwindCSS 3.x, atomic components
-- **Backend** : Node 18+, Express, TypeScript, MongoDB (connexion Atlas ou locale)
-- **Auth** : JWT, cookies sécurisés (front/back)
-- **API** : REST, filtres dynamiques, RGPD
-- **DevOps** : VS Code, scripts de build/test, CI/CD (à venir)
-- **Hébergement** : en cours d'étude VPS ?
+* **Frontend** : React 18, Vite, TypeScript, TailwindCSS 3.x, atomic components
+* **Backend** : Node 18+, Express, TypeScript, MongoDB (connexion Atlas ou locale)
+* **Auth** : JWT, cookies sécurisés (front/back)
+* **API** : REST, filtres dynamiques, RGPD
+* **DevOps** : VS Code, scripts de build/test, CI/CD (à venir)
+* **Hébergement** : en cours d'étude VPS/Cloud
 
 ---
 
-## Démarrage rapide
+## Démarrage manuel (Node.js)
 
 ### 1. Prérequis
 
-- [Node.js 18+](https://nodejs.org/)
-- [npm 9+](https://www.npmjs.com/)
-- [MongoDB](https://www.mongodb.com/) (Atlas ou local)
+* [Node.js 18+](https://nodejs.org/)
+* [npm 9+](https://www.npmjs.com/)
+* [MongoDB](https://www.mongodb.com/) (Atlas ou local)
 
 ### 2. Cloner le repo
 
 ```bash
 git clone https://github.com/alaincoulet/ouquandquoi.git
 cd ouquandquoi
-````
+```
 
 ### 3. Installer les dépendances
 
@@ -123,6 +163,11 @@ npm run dev        # Accès: http://localhost:5173
 * `npm run build`     – Compiler TypeScript (dist/)
 * `npm test`          – Tests unitaires (à compléter)
 * `npm run lint`      – Lint/format (ESLint, Prettier)
+
+### Outils globaux
+
+* `rapport_projet_complet.sh` – Export d’un rapport complet du projet pour audit/débogage
+* `startA.sh` – Lance Docker Compose + ouvre les navigateurs pour front/back automatiquement
 
 ---
 
