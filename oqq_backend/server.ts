@@ -84,6 +84,4 @@ app.get("/api/health", (req, res) => {
 // ==== Lancement serveur ====
 app.listen(PORT, () => {
   console.log(`🚀 Serveur en ligne sur http://localhost:${PORT}`);
-  console.log("Nodemon actif");
 });
-
