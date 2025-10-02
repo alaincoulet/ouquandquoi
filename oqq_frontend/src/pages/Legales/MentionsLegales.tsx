@@ -1,26 +1,45 @@
-/**
- * src/pages/Legales/MentionsLegales.tsx
- * Page Mentions légales conforme oùquandquoi.fr
- * - Respecte le format global (Layout, props vides)
- * - Strictement typée, aucun warning
- */
-
-import React from "react";
+import React, { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 
 export default function MentionsLegales() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Handler général pour renvoyer vers la home avec state
+  const handleRedirectToHome = (navId: string, href: string) => {
+    if (href !== "/") {
+      navigate(href);
+      return;
+    }
+
+    navigate("/", {
+      state: {
+        from: location.pathname,
+        redirectTriggered: true,
+      },
+    });
+  };
+
   return (
     <Layout
       where={{ label: "", location: "", distance: undefined, lat: undefined, lon: undefined }}
-      onWhereChange={(val: any) => {}}
+      onWhereChange={(val) =>
+        navigate("/", { state: { where: val, redirectTriggered: true } })
+      }
       when=""
-      onWhenChange={(val: any) => {}}
+      onWhenChange={(val) =>
+        navigate("/", { state: { when: val, redirectTriggered: true } })
+      }
       value={{ keyword: "", category: undefined, subcategory: undefined, excludedSubcategories: [] }}
-      onWhatChange={(val: any) => {}}
-      onNavigate={() => {}}
+      onWhatChange={(val) =>
+        navigate("/", { state: { what: val, redirectTriggered: true } })
+      }
+      onNavigate={handleRedirectToHome}
     >
       <div className="max-w-3xl mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-4">Mentions légales</h1>
+
         <h2 className="text-2xl font-semibold mt-6 mb-2">Éditeur du site</h2>
         <p><strong>Nom du site :</strong> OùQuandQuoi.fr</p>
         <p><strong>Raison sociale :</strong> [Nom de l’entreprise ou micro-entreprise]</p>
@@ -54,9 +73,9 @@ export default function MentionsLegales() {
         <h2 className="text-2xl font-semibold mt-6 mb-2">Données personnelles</h2>
         <p>
           Les informations collectées via les formulaires sont exclusivement destinées à OùQuandQuoi
-          et ne sont jamais cédées à des tiers. Conformément à la loi « Informatique et Libertés » et au RGPD,
-          vous disposez d’un droit d’accès, de rectification et de suppression de vos données.
-          Vous pouvez exercer ces droits à l’adresse : contact@ouquandquoi.fr.
+          et ne sont jamais cédées à des tiers. Conformément à la loi « Informatique et Libertés »
+          et au RGPD, vous disposez d’un droit d’accès, de rectification et de suppression de vos
+          données. Vous pouvez exercer ces droits à l’adresse : contact@ouquandquoi.fr.
         </p>
 
         <h2 className="text-2xl font-semibold mt-6 mb-2">Cookies</h2>
