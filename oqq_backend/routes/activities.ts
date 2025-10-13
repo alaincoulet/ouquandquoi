@@ -1,10 +1,6 @@
 /**
  * oqq_backend/routes/activities.ts
  * Router Express pour les activités (oùquandquoi.fr)
- * - Route GET    /api/activities       : liste toutes les activités MongoDB
- * - Route GET    /api/activities/:id   : détail d'une activité MongoDB
- * - Route POST   /api/activities       : création d'une activité (NOUVEAU)
- * - Route DELETE /api/activities/:id   : suppression d'une activité MongoDB
  */
 
 import { Router } from "express";
@@ -15,12 +11,13 @@ import {
   getAllActivities,
   getActivityById,
   deleteActivity,
-  addActivity, // Ajout : création activité
+  addActivity,
 } from "../controllers/activityController";
+import { verifyToken } from "../middleware/verifyToken";
 
 const router = Router();
 
-// === Multer config locale (pour upload image) ===
+// === Multer config locale ===
 const imageStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = path.join(__dirname, "../public/images");
@@ -28,24 +25,21 @@ const imageStorage = multer.diskStorage({
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    const original = file.originalname;
-    const clean = original
+    const clean = file.originalname
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-zA-Z0-9.]+/g, "-")
       .replace(/^-+|-+$/g, "")
       .toLowerCase();
-    const unique = Date.now() + "-" + clean;
-    cb(null, unique);
+    cb(null, `${Date.now()}-${clean}`);
   },
 });
 const upload = multer({ storage: imageStorage });
 
-// === ROUTES ACTIVITÉS ===
+// === Routes ===
 router.get("/", getAllActivities);
 router.get("/:id", getActivityById);
-// ROUTE NOUVELLE : création (POST)
-router.post("/", upload.single("image"), addActivity);
+router.post("/", verifyToken, upload.single("image"), addActivity);  // ✅ protégé
 router.delete("/:id", deleteActivity);
 
 export default router;
