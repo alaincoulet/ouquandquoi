@@ -1,19 +1,14 @@
 // ==========================================================
 // FICHIER : oqq_backend/controllers/activityController.ts
 // Contrôleur principal pour les activités (oùquandquoi.fr)
-// - Récupération filtrée des activités selon expiration (champ "when")
-// - Paramètre ?expired=true pour affichage admin des activités expirées
-// - Suppression d'une activité (DELETE)
-// - Compatible frontend existant (clé "activities" attendue)
 // ==========================================================
 
 import { Request, Response } from "express";
-import Activity from "../models/Activity";
+import { AuthRequest } from "../middleware/verifyToken";
+import Activity, { IActivity } from "../models/Activity";
 
 /**
- * Fonction utilitaire : extrait la date de fin d’une activité ("when" string)
- * - Gère les formats : "JJ/MM/AAAA" ou "JJ/MM/AAAA - JJ/MM/AAAA"
- * - Retourne un objet Date JS correspondant à la date de fin (ou undefined si parsing impossible)
+ * Fonction utilitaire : extrait la date de fin d’une activité ("when" string)
  */
 function extractEndDate(when?: string): Date | undefined {
   if (!when) return undefined;
@@ -26,134 +21,119 @@ function extractEndDate(when?: string): Date | undefined {
 }
 
 /**
- * Fonction utilitaire : détermine si une activité est expirée
- * - Expirée si la date du jour (à minuit) > date de fin (date+1j)
- * - Ajoute un LOG détaillé pour debug (affiche chaque activité évaluée)
+ * Détermine si une activité est expirée
  */
 function isExpiredActivity(when?: string, id?: string): boolean {
   const endDate = extractEndDate(when);
-  if (!endDate) {
-    console.warn(`⛔ [Expiration] _id="${id}" | Champ when illisible :`, when);
-    return false;
-  }
-  const endDatePlusOne = new Date(endDate);
-  endDatePlusOne.setDate(endDatePlusOne.getDate() + 1);
+  if (!endDate) return false;
+  const endPlusOne = new Date(endDate);
+  endPlusOne.setDate(endPlusOne.getDate() + 1);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
-  const expired = today >= endDatePlusOne;
-  console.log(
-    `[Expiration] _id="${id}" | when="${when}" | endDate=${endDate.toISOString()} | today=${today.toISOString()} | expired=${expired}`
-  );
-  return expired;
+  return today >= endPlusOne;
 }
 
 /**
- * Liste toutes les activités (MongoDB natif) avec filtrage expiration
- * GET /api/activities?expired=false|true
- * - Par défaut (ou expired=false) : uniquement les activités non expirées (visiteur, utilisateur)
- * - expired=true : uniquement les activités expirées (admin)
- * Retourne : { activities: Activity[] }
+ * Liste toutes les activités (avec ou sans expirées)
  */
 export async function getAllActivities(req: Request, res: Response) {
   try {
     const expiredParam = req.query.expired;
-    const activities = await Activity.find().sort({ createdAt: -1 });
+    const activities: IActivity[] = await Activity.find()
+      .populate("user", "prenom nom pseudo")
+      .sort({ createdAt: -1 });
 
-    let filteredActivities;
-    if (expiredParam === "true") {
-      // Mode admin : ne retourner QUE les expirées
-      filteredActivities = activities.filter(act =>
-        isExpiredActivity(act.when, act._id?.toString())
-      );
-    } else {
-      // Mode visiteur/utilisateur : que les non-expirées
-      filteredActivities = activities.filter(act =>
-        !isExpiredActivity(act.when, act._id?.toString())
-      );
-    }
+    // ✅ Typage explicite => plus d’erreur _id unknown
+    const filtered = activities.filter((a: IActivity) => {
+      const idStr = a._id ? a._id.toString() : "";
+      return expiredParam === "true"
+        ? isExpiredActivity(a.when, idStr)
+        : !isExpiredActivity(a.when, idStr);
+    });
 
-    res.json({ activities: filteredActivities });
+    res.json({ activities: filtered });
   } catch (err) {
     console.error("Erreur getAllActivities:", err);
-    res.status(500).json({ error: "Erreur lors de la récupération des activités." });
+    res
+      .status(500)
+      .json({ error: "Erreur lors de la récupération des activités." });
   }
 }
 
 /**
- * Récupère une activité par son _id Mongo natif (sans filtrage expiration)
- * GET /api/activities/:id
- * Retourne : { activity: Activity }
+ * Récupère une activité par ID
  */
 export async function getActivityById(req: Request, res: Response) {
   try {
-    const id = req.params.id;
-    if (!id || id.length !== 24) {
-      return res.status(400).json({ error: "ID d'activité invalide." });
-    }
-    const activity = await Activity.findById(id);
-    if (!activity) return res.status(404).json({ error: "Activité non trouvée." });
+    const { id } = req.params;
+    if (!id || id.length !== 24)
+      return res.status(400).json({ error: "ID invalide." });
+
+    const activity = await Activity.findById(id).populate(
+      "user",
+      "prenom nom pseudo"
+    );
+    if (!activity)
+      return res.status(404).json({ error: "Activité non trouvée." });
     res.json({ activity });
   } catch (err) {
     console.error("Erreur getActivityById:", err);
-    res.status(500).json({ error: "Erreur lors de la récupération de l'activité." });
+    res
+      .status(500)
+      .json({ error: "Erreur lors de la récupération de l'activité." });
   }
 }
 
 /**
- * Supprime une activité par son _id Mongo natif
- * DELETE /api/activities/:id
- * Retourne : { message: "Activité supprimée." }
+ * Supprime une activité
  */
 export async function deleteActivity(req: Request, res: Response) {
   try {
-    const id = req.params.id;
-    if (!id || id.length !== 24) {
-      return res.status(400).json({ error: "ID d'activité invalide." });
-    }
-    const activity = await Activity.findById(id);
-    if (!activity) {
+    const { id } = req.params;
+    if (!id || id.length !== 24)
+      return res.status(400).json({ error: "ID invalide." });
+
+    const activity = await Activity.findByIdAndDelete(id);
+    if (!activity)
       return res.status(404).json({ error: "Activité non trouvée." });
-    }
-    await Activity.findByIdAndDelete(id);
+
     res.json({ message: "Activité supprimée." });
   } catch (err) {
     console.error("Erreur deleteActivity:", err);
-    res.status(500).json({ error: "Erreur lors de la suppression de l'activité." });
+    res.status(500).json({ error: "Erreur lors de la suppression." });
   }
 }
 
 /**
- * Crée une nouvelle activité (POST /api/activities)
- * - Attend un FormData (clé "data" pour l'objet, "image" pour le fichier éventuel)
- * - Retourne { activity }
+ * Crée une nouvelle activité
  */
-export async function addActivity(req: Request, res: Response) {
+export async function addActivity(req: AuthRequest, res: Response) {
   try {
-    let imageUrl;
-    if (req.file) {
-      imageUrl = `/images/${req.file.filename}`;
-    } else if (req.body.image) {
-      imageUrl = req.body.image;
-    }
+    if (!req.user?._id)
+      return res.status(401).json({ error: "Utilisateur non authentifié." });
+
+    let imageUrl: string | undefined;
+    if (req.file) imageUrl = `/images/${req.file.filename}`;
+    else if (req.body.image) imageUrl = req.body.image;
+
     let data = req.body;
-    if (typeof req.body.data === "string") {
-      data = JSON.parse(req.body.data);
-    }
+    if (typeof req.body.data === "string") data = JSON.parse(req.body.data);
+
     const activity = new Activity({
       ...data,
       image: imageUrl,
+      user: req.user._id,
     });
+
     await activity.save();
-    res.status(201).json({ activity });
+    const populated = await activity.populate("user", "prenom nom pseudo");
+
+    res.status(201).json({ activity: populated });
   } catch (err) {
     console.error("Erreur addActivity:", err);
-    res.status(500).json({ error: "Erreur lors de la création de l'activité." });
+    res
+      .status(500)
+      .json({ error: "Erreur lors de la création de l'activité." });
   }
 }
-
-// ==========================================================
-// Convention : clé de haut niveau ("activity", "activities" ou "message")
-// Jamais exposer d'info sensible ni __v, ni password, etc.
-// ==========================================================
