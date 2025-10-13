@@ -72,7 +72,7 @@ const Layout: React.FC<LayoutProps> = ({
     <div
       className={`relative flex flex-col font-quicksand overflow-x-hidden ${className}`}
       style={{
-        backgroundImage: "url('/pub_adrar.png')",
+        backgroundImage: "url('/pub_adrar.jpg')",
         backgroundSize: 'auto',
         backgroundPosition: '0 0',
         backgroundAttachment: 'fixed',
