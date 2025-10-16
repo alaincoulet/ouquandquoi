@@ -160,7 +160,7 @@ export function FilterWherePanel({
   }
 
   return (
-    <div id="where-panel" className="absolute top-full left-0 bg-white border shadow rounded-lg p-4 z-20 w-80">
+    <div id="where-panel" className="absolute top-full left-0 bg-white border shadow rounded-lg p-4 z-50 w-80">
       <div className="flex justify-between items-center mb-2">
         <span className="font-semibold">Où ?</span>
         <button onClick={onClose} className="text-xs text-gray-500">Fermer</button>
