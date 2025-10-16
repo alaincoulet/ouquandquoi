@@ -25,6 +25,7 @@ import LoginPage from "@/pages/Auth/LoginPage";
 import ResetPasswordPage from "@/pages/Auth/ResetPasswordPage";
 import RegisterPage from "@/pages/Auth/RegisterPage";
 import ProfilePage from "@/pages/Auth/ProfilePage";
+import RoleChangePage from "@/pages/Auth/RoleChangePage";
 
 // API & Types
 import { getActivities, addFavorite, removeFavorite, getFavorites } from "@/config/api";
@@ -323,6 +324,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/mot-de-passe-oublie" element={<ResetPasswordPage />} />
           <Route path="/profil" element={<ProfilePage />} />
+          <Route path="/changer-de-role" element={<RoleChangePage />} />
 
           {/* === (Optionnel) Espace admin si protégé par route guard ailleurs === */}
           <Route path="/admin" element={<AdminDashboardPage />} />

@@ -1,26 +1,26 @@
 /**
  * oqq_backend/middleware/isAdmin.ts
  *
- * Middleware Express pour vérifier que l'utilisateur est authentifié ET admin.
- * - Vérifie la présence et la validité du JWT
- * - Vérifie que le rôle est bien "admin"
- * - Bloque la route sinon (401 ou 403)
- * - Place le user décodé sur req.user (pour usage ultérieur)
+ * Express middleware to verify that the user is authenticated AND has admin or moderator privileges.
+ * - Checks for the presence and validity of the JWT
+ * - Allows access if role is "admin" or "moderator"
+ * - Denies access otherwise (401 or 403)
+ * - Attaches the decoded user to req.user for downstream use
  */
 
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "changeme!"; // À sécuriser en prod
+const JWT_SECRET = process.env.JWT_SECRET || "changeme!"; // To be secured in production
 
 export interface AuthRequest extends Request {
-  user?: any; // On peut typer plus finement si besoin
+  user?: any; // Can be typed more strictly with IUser if needed
 }
 
-export function isAdmin(req: AuthRequest, res: Response, next: NextFunction) {
+export function isAdminOrModerator(req: AuthRequest, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
-    return res.status(401).json({ error: "Non authentifié. Token manquant." });
+    return res.status(401).json({ error: "Not authenticated. Token missing." });
   }
 
   const token = authHeader.split(" ")[1];
@@ -28,14 +28,14 @@ export function isAdmin(req: AuthRequest, res: Response, next: NextFunction) {
   try {
     user = jwt.verify(token, JWT_SECRET) as any;
   } catch (err) {
-    return res.status(401).json({ error: "Token invalide." });
+    return res.status(401).json({ error: "Invalid token." });
   }
 
-  if (!user || user.role !== "admin") {
-    return res.status(403).json({ error: "Accès réservé à l’administrateur." });
+  if (!user || (user.role !== "admin" && user.role !== "moderator")) {
+    return res.status(403).json({ error: "Access restricted to administrators and moderators." });
   }
 
-  // On place l'utilisateur décodé dans la requête pour la suite si besoin
+  // Attach decoded user to the request object for later use
   req.user = user;
   next();
 }

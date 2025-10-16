@@ -1,8 +1,11 @@
 /**
  * oqq_backend/routes/users.ts
  *
- * Router Express pour la gestion des utilisateurs (oùquandquoi.fr)
- * ...
+ * Express router for user management (oùquandquoi.fr)
+ * - Authentication, registration, profile updates
+ * - Password recovery (secure)
+ * - Favorites and recently viewed activities
+ * - Admin/Moderator: validation of pending users
  */
 
 import { Router } from "express";
@@ -16,62 +19,78 @@ import {
   resetPassword,
   updateProfile,
   deleteMe,
-  // === Ajouts admin-only ===
   getPendingUsers,
-  validateUser
+  validateUser,
+  addRecentlyViewed,
+  getRecentlyViewed
 } from "../controllers/userController";
-import { isAdmin } from "../middleware/isAdmin"; // Ajout middleware
-import { addRecentlyViewed, getRecentlyViewed } from "../controllers/userController";
+
+import { verifyToken } from "../middleware/verifyToken";
+import { isAdminOrModerator } from "../middleware/isAdmin";
 
 const router = Router();
 
-// === Authentification & gestion utilisateur ===
+// ==========================================================
+// === AUTHENTICATION & USER MANAGEMENT =====================
+// ==========================================================
 
-// Inscription utilisateur
+// Register new user
 router.post("/register", registerUser);
 
-// Connexion utilisateur (JWT)
+// Login user (returns JWT)
 router.post("/login", loginUser);
 
-// Liste des favoris utilisateur (GET)
-router.get("/favorites", getFavorites);
+// ==========================================================
+// === FAVORITES ============================================
+// ==========================================================
 
-// Ajout d'une activité aux favoris (PATCH)
-router.patch("/favorites/:activityId", addFavorite);
+// Get user's favorites (JWT required)
+router.get("/favorites", verifyToken, getFavorites);
 
-// Suppression d'une activité des favoris (DELETE)
-router.delete("/favorites/:activityId", removeFavorite);
+// Add an activity to favorites
+router.patch("/favorites/:activityId", verifyToken, addFavorite);
 
-// Mise à jour du profil utilisateur (pseudo, nom, prénom, mdp)
-router.patch("/profile", updateProfile);
+// Remove an activity from favorites
+router.delete("/favorites/:activityId", verifyToken, removeFavorite);
 
-// === Reset password (sécurisé) ===
+// ==========================================================
+// === PROFILE MANAGEMENT ===================================
+// ==========================================================
 
-// Demande de reset password (envoi email)
+// Update user profile (pseudo, name, password, etc.)
+router.patch("/profile", verifyToken, updateProfile);
+
+// Delete user account (self-delete)
+router.delete("/me", verifyToken, deleteMe);
+
+// ==========================================================
+// === PASSWORD RESET (SECURE) ==============================
+// ==========================================================
+
+// Request password reset (send email)
 router.post("/forgot-password", forgotPassword);
 
-// Réinitialisation du mot de passe via token
+// Reset password using token
 router.post("/reset-password", resetPassword);
 
-// === Suppression du compte utilisateur ===
+// ==========================================================
+// === ADMIN / MODERATOR ACCESS =============================
+// ==========================================================
 
-// Suppression définitive (authentification JWT requise)
-router.delete("/me", deleteMe);
+// List all users with status "pending"
+router.get("/pending", verifyToken, isAdminOrModerator, getPendingUsers);
 
-// === ADMIN ONLY : validation utilisateurs en attente ===
+// Validate a pending user (change role to "user" or "advertiser")
+router.patch("/validate/:userId", verifyToken, isAdminOrModerator, validateUser);
 
-// Liste tous les users "pending"
-router.get("/pending", isAdmin, getPendingUsers);
+// ==========================================================
+// === RECENTLY VIEWED ACTIVITIES ===========================
+// ==========================================================
 
-// Validation d'un user "pending" (passe en "user")
-router.patch("/validate/:userId", isAdmin, validateUser);
+// Add an activity to the user's recently viewed list
+router.patch("/recently-viewed/:activityId", verifyToken, addRecentlyViewed);
 
-// === Consulté récemment (consultation d'activité) ===
-
-// Ajoute une activité à la liste "consulté récemment"
-router.patch("/recently-viewed/:activityId", addRecentlyViewed);
-
-// Liste les activités consultées récemment (10 max, plus récente à gauche)
-router.get("/recently-viewed", getRecentlyViewed);
+// Get the 10 most recently viewed activities
+router.get("/recently-viewed", verifyToken, getRecentlyViewed);
 
 export default router;
