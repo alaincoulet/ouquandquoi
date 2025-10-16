@@ -102,7 +102,7 @@ const Layout: React.FC<LayoutProps> = ({
       {/* Main content container */}
       <div
         className="
-          z-40
+          z-30
           flex flex-col
           mx-auto
           w-full
@@ -114,7 +114,7 @@ const Layout: React.FC<LayoutProps> = ({
           border border-gray-200
         "
       >
-        <main role="main" aria-label="Contenu principal" className="flex-1 w-full">
+        <main role="main" aria-label="Contenu principal" className="flex-1 w-full overflow-visible">
           {children}
         </main>
         <Footer />

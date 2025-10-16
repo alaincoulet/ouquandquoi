@@ -92,7 +92,7 @@ const StickyHeaderBlock: React.FC<StickyHeaderBlockProps> = ({
 <div ref={containerTopRef} style={{ height: 1 }} />
 
 {/* HEADER ORIGINAL (dans le flux normal, même wrapper que sticky) */}
-<div ref={headerRef} className="max-w-7xl w-full rounded-xl bg-gray-50 border border-gray-200 shadow-xl mx-auto">
+<div ref={headerRef} className="max-w-7xl w-full rounded-xl bg-gray-50 border border-gray-200 shadow-xl mx-auto relative z-50 overflow-visible">
   <Header {...headerProps} />
 </div>
 
