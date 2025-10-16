@@ -4,46 +4,63 @@
  * Serveur Express principal pour oùquandquoi.fr (API backend)
  * - Sert l'API REST pour les utilisateurs (via MongoDB et userController)
  * - Sert les images statiques (public/images)
- * - Gère les activités uniquement via MongoDB natif (fini le JSON local)
+ * - Gère les activités via MongoDB natif (fini le JSON local)
+ * - Gère la réinitialisation de mot de passe sécurisée (token + expiration)
  * - Toutes les routes /api/users et /api/activities sont 100% ObjectId natif Mongo côté favoris
  */
 
 import dotenv from "dotenv";
 dotenv.config();
 
-import express from "express";
+import express, { Request, Response } from "express";
 import multer from "multer";
 import fs from "fs";
 import path from "path";
 import cors from "cors";
 import mongoose from "mongoose";
-import userRoutes from "./routes/users";
-import activityRoutes from "./routes/activities"; // Nouvelle route Mongo natif
 
+// === Routes principales ===
+import userRoutes from "./routes/users";
+import activityRoutes from "./routes/activities";
+// import passwordRoutes from "./routes/passwords"; // Anciennes routes reset (doublon)
+
+// === Sécurité / Hashing ===
+import bcrypt from "bcryptjs"; // utilisé pour le hash dans le reset password
+import crypto from "crypto";   // utilisé pour générer des tokens sécurisés
+
+// === Configuration Express ===
 const app = express();
 const PORT = 4000;
 
-// ===== Connexion MongoDB Atlas ou locale =====
+// ==========================================================
+// === CONNEXION À MONGODB ATLAS OU LOCALE ==================
+// ==========================================================
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost/oqq_local";
-mongoose.connect(MONGO_URI)
+mongoose
+  .connect(MONGO_URI)
   .then(() => console.log("✅ Connecté à MongoDB"))
   .catch((err) => console.error("Erreur MongoDB :", err));
-// =============================================
 
-// --- Middlewares globaux ---
+// ==========================================================
+// === MIDDLEWARES GLOBAUX ==================================
+// ==========================================================
 app.use(cors());
 app.use(express.json());
 
 // Sert les images statiques depuis /images/
 app.use("/images", express.static("/app/public/images"));
 
-// === ROUTES UTILISATEURS (MongoDB natif, favoris via _id) ===
-app.use("/api/users", userRoutes);
+// ==========================================================
+// === ROUTES API PRINCIPALES ===============================
+// ==========================================================
+app.use("/api/users", userRoutes);        // Gestion utilisateurs
+app.use("/api/activities", activityRoutes); // Gestion activités
+// Les routes de reset sont désormais gérées sous /api/users (forgot-password, reset-password)
+// app.use("/api/passwords", passwordRoutes);
 
-// === ROUTES ACTIVITÉS (MongoDB natif) ===
-app.use("/api/activities", activityRoutes);
-
-// === MULTER : gestion des images pour les activités ===
+// ==========================================================
+// === MULTER : UPLOAD D'IMAGES POUR LES ACTIVITÉS =========
+// ==========================================================
 const imageStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const dir = path.join(__dirname, "public/images");
@@ -62,6 +79,7 @@ const imageStorage = multer.diskStorage({
     cb(null, unique);
   },
 });
+
 const upload = multer({
   storage: imageStorage,
   fileFilter: (req, file, cb) => {
@@ -72,16 +90,19 @@ const upload = multer({
   },
 });
 
-// ====== EXEMPLE POUR GÉRER LE POST IMAGE EN MONGO (si besoin plus tard) ======
-// (À activer plus tard : ici, tu passes par activityRoutes pour CRUD MongoDB)
-// app.post("/api/activities", upload.single("image"), (req, res) => { ... })
+// Exemple d’upload direct (désactivé pour le moment)
+// app.post("/api/activities", upload.single("image"), (req, res) => { ... });
 
-// === ENDPOINT SANTÉ (optionnel, pour vérifier Mongo) ===
-app.get("/api/health", (req, res) => {
+// ==========================================================
+// === ENDPOINT SANTÉ POUR MONITORING =======================
+// ==========================================================
+app.get("/api/health", (req: Request, res: Response) => {
   res.json({ status: "ok", mongo: mongoose.connection.readyState });
 });
 
-// ==== Lancement serveur ====
+// ==========================================================
+// === LANCEMENT DU SERVEUR ================================
+// ==========================================================
 app.listen(PORT, () => {
   console.log(`🚀 Serveur en ligne sur http://localhost:${PORT}`);
 });

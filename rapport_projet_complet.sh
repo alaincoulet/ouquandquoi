@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# === SCRIPT GLOBAL EXPORT OÙQUANDQUOI.FR (pour ChatGPT) ===
-
 EXPORT_DIR="dev_exports"
 NOW=$(date +"%Y-%m-%d_%H%M")
 EXPORT_FILE="$EXPORT_DIR/rapport_projet_complet_${NOW}.txt"
@@ -14,24 +12,23 @@ echo "Node.js version : $(node -v 2>/dev/null || echo 'non détecté')" >> "$EXP
 echo "NPM version    : $(npm -v 2>/dev/null || echo 'non détecté')" >> "$EXPORT_FILE"
 echo "" >> "$EXPORT_FILE"
 
-# =============================
-# ARBORESCENCE GLOBALE
-# =============================
 echo "----- ARBORESCENCE RACINE (1er niveau) -----" >> "$EXPORT_FILE"
 ls -lah --group-directories-first >> "$EXPORT_FILE"
 echo "" >> "$EXPORT_FILE"
 
-echo "----- ARBORESCENCE COMPLÈTE (tree -L 4) -----" >> "$EXPORT_FILE"
+echo "----- ARBORESCENCE COMPLÈTE -----" >> "$EXPORT_FILE"
 if command -v tree &> /dev/null; then
-    tree -L 4 -a -I 'node_modules|.git' >> "$EXPORT_FILE"
+    tree -L 4 -a -I 'node_modules|.git|dist|coverage|dev_exports' >> "$EXPORT_FILE"
 else
-    find . -maxdepth 4 | sort >> "$EXPORT_FILE"
+    find . -maxdepth 4 \
+        -not -path "*/node_modules/*" \
+        -not -path "*/.git/*" \
+        -not -path "*/dist/*" \
+        -not -path "*/coverage/*" \
+        -not -path "*/dev_exports/*" | sort >> "$EXPORT_FILE"
 fi
 echo "" >> "$EXPORT_FILE"
 
-# =============================
-# FICHIERS CLÉS À LA RACINE
-# =============================
 echo "----- FICHIERS CLÉS À LA RACINE -----" >> "$EXPORT_FILE"
 for f in docker-compose.yml .env .gitignore README.md; do
     if [[ -f "$f" ]]; then
@@ -45,9 +42,6 @@ for f in docker-compose.yml .env .gitignore README.md; do
 done
 echo "" >> "$EXPORT_FILE"
 
-# =============================
-# DOCKER COMPOSE
-# =============================
 if [[ -f "docker-compose.yml" ]]; then
     echo "----- DOCKER COMPOSE -----" >> "$EXPORT_FILE"
     echo "--- docker-compose.yml (hash MD5 & contenu complet) ---" >> "$EXPORT_FILE"
@@ -59,9 +53,6 @@ else
 fi
 echo "" >> "$EXPORT_FILE"
 
-# =============================
-# BACKEND
-# =============================
 if [ -d oqq_backend ]; then
     echo "----- EXPORT BACKEND -----" >> "$EXPORT_FILE"
     (
@@ -84,17 +75,17 @@ if [ -d oqq_backend ]; then
         echo "" >> "../$EXPORT_FILE"
 
         echo "----- VARIABLES D'ENVIRONNEMENT -----" >> "../$EXPORT_FILE"
-        grep -R "process.env" . --include="*.ts" --include="*.js" >> "../$EXPORT_FILE" || true
+        grep -R "process.env" src --include="*.ts" --include="*.js" >> "../$EXPORT_FILE" || true
         echo "" >> "../$EXPORT_FILE"
 
         echo "----- ARBORESCENCE BACKEND -----" >> "../$EXPORT_FILE"
         if command -v tree &> /dev/null; then
-            tree -a -I 'node_modules|.git' >> "../$EXPORT_FILE"
+            tree -a -I 'node_modules|.git|dist|coverage|dev_exports' >> "../$EXPORT_FILE"
         fi
         echo "" >> "../$EXPORT_FILE"
 
         echo "----- LISTE DES FICHIERS .ts/.js -----" >> "../$EXPORT_FILE"
-        find . -type f \( -name "*.ts" -o -name "*.js" \) | sort >> "../$EXPORT_FILE"
+        find src -type f \( -name "*.ts" -o -name "*.js" \) | sort >> "../$EXPORT_FILE"
         echo "" >> "../$EXPORT_FILE"
 
         echo "----- IMAGES BACKEND/public/images -----" >> "../$EXPORT_FILE"
@@ -108,9 +99,6 @@ else
     echo "Dossier oqq_backend absent !" >> "$EXPORT_FILE"
 fi
 
-# =============================
-# FRONTEND
-# =============================
 if [ -d oqq_frontend ]; then
     echo "----- EXPORT FRONTEND -----" >> "$EXPORT_FILE"
     (
@@ -148,7 +136,7 @@ if [ -d oqq_frontend ]; then
 
         echo "----- ARBORESCENCE src/ -----" >> "../$EXPORT_FILE"
         if command -v tree &> /dev/null; then
-            tree -a src >> "../$EXPORT_FILE"
+            tree -a src -I 'node_modules|.git|dist|coverage|dev_exports' >> "../$EXPORT_FILE"
         fi
         echo "" >> "../$EXPORT_FILE"
     )

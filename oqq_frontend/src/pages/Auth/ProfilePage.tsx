@@ -383,7 +383,8 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Formulaire de changement de mot de passe */}
+        {/* Formulaire de changement de mot de passe */
+        }
         <div className="mb-4">
           {!editPassword ? (
             <button
@@ -448,6 +449,17 @@ export default function ProfilePage() {
               </div>
             </form>
           )}
+        </div>
+
+        {/* Lien: Changer de rôle ? */}
+        <div className="mb-6">
+          <button
+            type="button"
+            className="text-blue-600 underline text-sm"
+            onClick={() => navigate("/changer-de-role")}
+          >
+            Changer de rôle ?
+          </button>
         </div>
 
         {/* Bouton de déconnexion */}
