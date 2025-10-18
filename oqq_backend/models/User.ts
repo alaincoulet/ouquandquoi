@@ -29,11 +29,24 @@ export interface IUser extends Document {
   genre?: string;
   tel?: string;
   notifications?: boolean;
+  preferredEmailClient?: "gmail" | "outlook" | "yahoo" | "default"; // Préférence de messagerie pour le partage
   favoris: Types.ObjectId[];         // Favorites: native ObjectIds only
   recentlyViewed: Types.ObjectId[];  // Recently viewed (10 max)
   savedSearches: {
     name: string;
     filters: Record<string, any>;
+    createdAt: Date;
+  }[];
+  scheduledActivities: {
+    activityId: Types.ObjectId;
+    scheduledDate: Date;
+    reminders: {
+      type: "email" | "sms" | "both";
+      timeBefore: number; // minutes avant l'événement
+      repeat: number; // nombre de répétitions
+    }[];
+    notes?: string;
+    createdAt: Date;
   }[];
   role: "admin" | "moderator" | "advertiser" | "user" | "pending" | "guest";
   certificationStatus: "none" | "pending" | "validated" | "rejected";
@@ -73,6 +86,11 @@ const UserSchema = new Schema<IUser>(
     genre: { type: String },
     tel: { type: String },
     notifications: { type: Boolean, default: true },
+    preferredEmailClient: { 
+      type: String, 
+      enum: ["gmail", "outlook", "yahoo", "default"], 
+      default: "default" 
+    },
 
     // === Relations ===
     favoris: [
@@ -87,6 +105,24 @@ const UserSchema = new Schema<IUser>(
       {
         name: { type: String },
         filters: { type: Schema.Types.Mixed },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+
+    // === Scheduled activities (calendar) ===
+    scheduledActivities: [
+      {
+        activityId: { type: Schema.Types.ObjectId, ref: "Activity", required: true },
+        scheduledDate: { type: Date, required: true },
+        reminders: [
+          {
+            type: { type: String, enum: ["email", "sms", "both"], required: true },
+            timeBefore: { type: Number, required: true }, // minutes
+            repeat: { type: Number, default: 1 },
+          },
+        ],
+        notes: { type: String },
+        createdAt: { type: Date, default: Date.now },
       },
     ],
 

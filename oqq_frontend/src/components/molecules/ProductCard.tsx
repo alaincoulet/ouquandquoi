@@ -10,6 +10,9 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Activity } from "@/types/activity";
+import { CalendarIcon } from "@heroicons/react/24/outline";
+import ScheduleFavoriteModal from "@/components/organisms/ScheduleFavoriteModal";
+import { useAuth } from "@/context/AuthContext";
 
 // Props for the ProductCard component
 interface ProductCardProps {
@@ -40,6 +43,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   // ====================
   const [favLocal, setFavLocal] = useState(!!product.isFavorite);
   const [loadingFav, setLoadingFav] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   // ====================
   // Behavior
@@ -91,6 +96,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
+  // Schedule button handler
+  const handleScheduleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      alert("Veuillez vous connecter pour programmer une activité");
+      return;
+    }
+    if (!favLocal) {
+      alert("Veuillez d'abord ajouter cette activité à vos favoris");
+      return;
+    }
+    setShowScheduleModal(true);
+  };
+
   // ====================
   // Render
   // ====================
@@ -131,34 +150,50 @@ const ProductCard: React.FC<ProductCardProps> = ({
               (e.target as HTMLImageElement).src = "/placeholder.png";
             }}
           />
-          {/* Favorite button (top right) */}
-          {onToggleFavorite && (
-            <button
-              className="absolute top-2 right-2 z-10 bg-white/80 rounded-full p-1 shadow hover:bg-yellow-100 transition focus:outline-none focus:ring focus:ring-yellow-300"
-              onClick={handleFavoriteClick}
-              aria-label={favLocal ? "Remove from favorites" : "Add to favorites"}
-              tabIndex={0}
-              disabled={loadingFav}
-              type="button"
-            >
-              {/* Heart SVG: filled if favorite, outline otherwise */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className={`w-6 h-6 ${favLocal ? "text-yellow-400" : "text-gray-400"} transition`}
-                fill={favLocal ? "currentColor" : "none"}
-                viewBox="0 0 24 24"
-                stroke={favLocal ? "currentColor" : "#a1a1aa"}
-                strokeWidth={2}
+          {/* Action buttons (top right) */}
+          <div className="absolute top-2 right-2 z-10 flex gap-1">
+            {/* Schedule button (only if favorite) */}
+            {onToggleFavorite && favLocal && isAuthenticated && (
+              <button
+                className="bg-white/90 rounded-full p-1.5 shadow hover:bg-blue-100 transition focus:outline-none focus:ring focus:ring-blue-300"
+                onClick={handleScheduleClick}
+                aria-label="Programmer dans le calendrier"
+                title="Programmer dans le calendrier"
+                tabIndex={0}
+                type="button"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 21C12 21 4 13.888 4 8.941A4.941 4.941 0 019 4a5.024 5.024 0 013 1.05A5.024 5.024 0 0115 4a4.941 4.941 0 015 4.941C20 13.888 12 21 12 21z"
+                <CalendarIcon className="w-5 h-5 text-blue-600" />
+              </button>
+            )}
+            {/* Favorite button */}
+            {onToggleFavorite && (
+              <button
+                className="bg-white/80 rounded-full p-1 shadow hover:bg-yellow-100 transition focus:outline-none focus:ring focus:ring-yellow-300"
+                onClick={handleFavoriteClick}
+                aria-label={favLocal ? "Remove from favorites" : "Add to favorites"}
+                tabIndex={0}
+                disabled={loadingFav}
+                type="button"
+              >
+                {/* Heart SVG: filled if favorite, outline otherwise */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={`w-6 h-6 ${favLocal ? "text-yellow-400" : "text-gray-400"} transition`}
                   fill={favLocal ? "currentColor" : "none"}
-                />
-              </svg>
-            </button>
-          )}
+                  viewBox="0 0 24 24"
+                  stroke={favLocal ? "currentColor" : "#a1a1aa"}
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 21C12 21 4 13.888 4 8.941A4.941 4.941 0 019 4a5.024 5.024 0 013 1.05A5.024 5.024 0 0115 4a4.941 4.941 0 015 4.941C20 13.888 12 21 12 21z"
+                    fill={favLocal ? "currentColor" : "none"}
+                  />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
         {/* Text block: title, info, description */}
         <div
@@ -182,6 +217,17 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </p>
         </div>
       </article>
+
+      {/* Schedule Modal */}
+      {showScheduleModal && (
+        <ScheduleFavoriteModal
+          activity={product}
+          onClose={() => setShowScheduleModal(false)}
+          onSuccess={() => {
+            setShowScheduleModal(false);
+          }}
+        />
+      )}
     </Link>
   );
 };

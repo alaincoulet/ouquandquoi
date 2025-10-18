@@ -3,6 +3,9 @@
 # === Script démarrage Docker + navigateur ===
 # Lance frontend + backend dans Docker et ouvre 2 onglets navigateur
 
+echo ">>> Nettoyage du cache Docker..."
+docker system prune -f
+
 echo ">>> Lancement des conteneurs Docker..."
 docker-compose up --build -d
 

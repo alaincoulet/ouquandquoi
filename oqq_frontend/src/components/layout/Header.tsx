@@ -4,6 +4,8 @@
 // - Inline filters Où ? Quand ? Quoi ?
 // - Horizontal category nav below header
 // - Rounded top corners for visual continuity with layout
+// Correction 2025-10-17 : Le cœur Favoris dans le header est désactivé pour les visiteurs.
+// Survol : affiche une info-bulle "Veuillez vous connecter ou créer un compte afin de pouvoir sélectionner et afficher vos favoris"
 // ==========================================================
 
 import React, { useState } from 'react'
@@ -15,7 +17,8 @@ import {
   KeyIcon,
   XMarkIcon,
   Bars3Icon,
-  UserIcon
+  UserIcon,
+  BookmarkIcon
 } from '@heroicons/react/24/outline'
 import { Link } from 'react-router-dom'
 import logo from '@/assets/images/logo_oqq.png'
@@ -23,6 +26,8 @@ import { useAuth } from '@/context/AuthContext'
 import { FilterWherePanel } from '@/components/molecules/filters/FilterWherePanel'
 import { FilterWhenPanel } from '@/components/molecules/filters/FilterWhenPanel'
 import { FilterWhatPanel } from '@/components/molecules/filters/FilterWhatPanel'
+import SavedSearchesPanel from '@/components/molecules/SavedSearchesPanel'
+import MyScheduleCalendar from '@/components/organisms/MyScheduleCalendar'
 
 interface HeaderProps {
   onNavigate?: (navId: string, href: string) => void
@@ -41,6 +46,8 @@ interface HeaderProps {
   value: { keyword: string; category?: string; subcategory?: string; excludedSubcategories?: string[] }
   onWhatChange: (val: { keyword: string; category?: string; subcategory?: string; excludedSubcategories?: string[] }) => void
   activitiesFiltered?: any[]
+  showMap?: boolean
+  onToggleMap?: () => void
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -53,17 +60,24 @@ const Header: React.FC<HeaderProps> = ({
   onWhenChange,
   value,
   onWhatChange,
-  activitiesFiltered
+  activitiesFiltered,
+  showMap = false,
+  onToggleMap
 }) => {
   // ==========================================================
-  // === STATE ================================================
+  // === ÉTAT (useState, useEffect, useContext, etc.) =========
   // ==========================================================
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeFilter, setActiveFilter] = useState<'where' | 'when' | 'what' | null>(null)
   const { user, isAuthenticated } = useAuth()
+  const [showFavTooltip, setShowFavTooltip] = useState(false)
+  const [showSavedSearches, setShowSavedSearches] = useState(false)
+  const [showSavedSearchesTooltip, setShowSavedSearchesTooltip] = useState(false)
+  const [showMyCalendar, setShowMyCalendar] = useState(false)
+  const [showCalendarTooltip, setShowCalendarTooltip] = useState(false)
 
   // ==========================================================
-  // === BEHAVIOR =============================================
+  // === COMPORTEMENT (fonctions, callbacks, logique métier) ===
   // ==========================================================
   const formatAddressLabel = () => {
     if (!where.label) return 'Où ?'
@@ -99,8 +113,20 @@ const Header: React.FC<HeaderProps> = ({
     onNavigate?.('category', `/category/${category}`)
   }
 
+  const handleLoadSavedSearch = (filters: any) => {
+    if (filters.where) {
+      onWhereChange(filters.where)
+    }
+    if (filters.when) {
+      onWhenChange(filters.when)
+    }
+    if (filters.what) {
+      onWhatChange(filters.what)
+    }
+  }
+
   // ==========================================================
-  // === RENDER ===============================================
+  // === AFFICHAGE (rendu JSX, mapping état => UI) ===========
   // ==========================================================
   return (
     <>
@@ -247,42 +273,140 @@ const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* === Actions: Déposer / Favoris / Profil === */}
+          {/* === Actions: Favoris / Profil === */}
           <div className="flex items-center gap-3">
-            <Link
-              to="/deposer"
-              onClick={() => onNavigate?.('deposer', '/deposer')}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white font-semibold transition duration-300 hover:brightness-105 hover:scale-[1.02]"
-            >
-              <span className="text-lg font-semibold">＋</span>
-              <span className="text-sm font-semibold">Déposer une activité</span>
-            </Link>
+            {/* --- SIGNET RECHERCHES SAUVEGARDÉES --- */}
+        <span
+          className="relative group"
+          onMouseEnter={() => !isAuthenticated && setShowSavedSearchesTooltip(true)}
+          onMouseLeave={() => setShowSavedSearchesTooltip(false)}
+        >
+          <button
+            type="button"
+            aria-label={isAuthenticated ? 'Mes recherches sauvegardées' : "Recherches sauvegardées (connexion requise)"}
+            onClick={isAuthenticated ? () => setShowSavedSearches(!showSavedSearches) : undefined}
+            disabled={!isAuthenticated}
+            tabIndex={isAuthenticated ? 0 : -1}
+            aria-disabled={!isAuthenticated}
+            className={`
+              focus:outline-none
+              transition-colors
+              ${isAuthenticated ? '' : 'cursor-not-allowed opacity-60'}
+            `}
+            style={{
+              pointerEvents: isAuthenticated ? 'auto' : 'none'
+            }}
+          >
+            <BookmarkIcon 
+              className={`w-6 h-6 transition-colors duration-150 ${
+                showSavedSearches
+                  ? 'text-green-600'
+                  : 'text-gray-400 group-hover:text-green-600'
+              }`}
+            />
+          </button>
+          {/* Tooltip explicite pour visiteur */}
+          {!isAuthenticated && showSavedSearchesTooltip && (
+            <div className="absolute left-1/2 z-50 -translate-x-1/2 mt-2 px-4 py-2 bg-black bg-opacity-90 text-xs text-white rounded shadow-lg whitespace-nowrap pointer-events-none select-none">
+              Veuillez vous connecter pour accéder à vos recherches sauvegardées
+            </div>
+          )}
+          {/* Panel des recherches sauvegardées */}
+          {showSavedSearches && isAuthenticated && (
+            <SavedSearchesPanel
+              onClose={() => setShowSavedSearches(false)}
+              onLoadSearch={handleLoadSavedSearch}
+            />
+          )}
+        </span>
 
-            <button
-              className="relative group focus:outline-none"
-              aria-label={favoritesActive ? 'Voir toutes les activités' : 'Afficher mes favoris en premier'}
-              onClick={onToggleFavorites}
+            {/* --- CALENDRIER MES ACTIVITÉS --- */}
+        <span
+          className="relative group"
+          onMouseEnter={() => !isAuthenticated && setShowCalendarTooltip(true)}
+          onMouseLeave={() => setShowCalendarTooltip(false)}
+        >
+          <button
+            type="button"
+            aria-label={isAuthenticated ? 'Mon calendrier' : "Calendrier (connexion requise)"}
+            onClick={isAuthenticated ? () => setShowMyCalendar(true) : undefined}
+            disabled={!isAuthenticated}
+            tabIndex={isAuthenticated ? 0 : -1}
+            aria-disabled={!isAuthenticated}
+            className={`
+              focus:outline-none
+              transition-colors
+              ${isAuthenticated ? '' : 'cursor-not-allowed opacity-60'}
+            `}
+            style={{
+              pointerEvents: isAuthenticated ? 'auto' : 'none'
+            }}
+          >
+            <CalendarIcon 
+              className={`w-6 h-6 transition-colors duration-150 ${
+                isAuthenticated
+                  ? 'text-blue-600 group-hover:text-blue-700'
+                  : 'text-gray-400'
+              }`}
+            />
+          </button>
+          {/* Tooltip explicite pour visiteur */}
+          {!isAuthenticated && showCalendarTooltip && (
+            <div className="absolute left-1/2 z-50 -translate-x-1/2 mt-2 px-4 py-2 bg-black bg-opacity-90 text-xs text-white rounded shadow-lg whitespace-nowrap pointer-events-none select-none">
+              Veuillez vous connecter pour accéder à votre calendrier
+            </div>
+          )}
+        </span>
+
+            {/* --- COEUR FAVORIS --- */}
+        <span
+          className="relative group"
+          onMouseEnter={() => !isAuthenticated && setShowFavTooltip(true)}
+          onMouseLeave={() => setShowFavTooltip(false)}
+        >
+          <button
+            type="button"
+            aria-label={isAuthenticated ? (favoritesActive ? 'Voir toutes les activités' : 'Afficher mes favoris en premier') : "Favoris (connexion requise)"}
+            onClick={isAuthenticated ? onToggleFavorites : undefined}
+            disabled={!isAuthenticated}
+            tabIndex={isAuthenticated ? 0 : -1}
+            aria-disabled={!isAuthenticated}
+            className={`
+              focus:outline-none
+              transition-colors
+              ${isAuthenticated ? '' : 'cursor-not-allowed opacity-60'}
+            `}
+            style={{
+              pointerEvents: isAuthenticated ? 'auto' : 'none'
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className={`w-6 h-6 transition-colors duration-150 ${
+                favoritesActive
+                  ? 'text-yellow-400'
+                  : 'text-gray-400 group-hover:text-yellow-400'
+              }`}
+              fill={favoritesActive ? 'currentColor' : 'none'}
+              viewBox="0 0 24 24"
+              stroke={favoritesActive ? 'currentColor' : '#a1a1aa'}
+              strokeWidth={2}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className={`w-6 h-6 transition-colors duration-150 ${
-                  favoritesActive
-                    ? 'text-yellow-400'
-                    : 'text-gray-400 group-hover:text-yellow-400'
-                }`}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 21C12 21 4 13.888 4 8.941A4.941 4.941 0 019 4a5.024 5.024 0 013 1.05A5.024 5.024 0 0115 4a4.941 4.941 0 015 4.941C20 13.888 12 21 12 21z"
                 fill={favoritesActive ? 'currentColor' : 'none'}
-                viewBox="0 0 24 24"
-                stroke={favoritesActive ? 'currentColor' : '#a1a1aa'}
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 21C12 21 4 13.888 4 8.941A4.941 4.941 0 019 4a5.024 5.024 0 013 1.05A5.024 5.024 0 0115 4a4.941 4.941 0 015 4.941C20 13.888 12 21 12 21z"
-                  fill={favoritesActive ? 'currentColor' : 'none'}
-                />
-              </svg>
-            </button>
+              />
+            </svg>
+          </button>
+          {/* Tooltip explicite pour visiteur */}
+          {!isAuthenticated && showFavTooltip && (
+            <div className="absolute left-1/2 z-50 -translate-x-1/2 mt-2 px-4 py-2 bg-black bg-opacity-90 text-xs text-white rounded shadow-lg whitespace-nowrap pointer-events-none select-none">
+              Veuillez vous connecter ou créer un compte afin de pouvoir sélectionner et afficher vos favoris
+            </div>
+          )}
+        </span>
 
             <div className="flex items-center gap-2">
               <Link
@@ -315,6 +439,11 @@ const Header: React.FC<HeaderProps> = ({
         onNavigate={onNavigate}
       />
 
+      {/* === My Schedule Calendar Modal === */}
+      {showMyCalendar && isAuthenticated && (
+        <MyScheduleCalendar onClose={() => setShowMyCalendar(false)} />
+      )}
+
       {/* === Category nav (horizontal) === */}
       <CategoryNav
         onSelect={handleCategorySelect}
@@ -323,6 +452,9 @@ const Header: React.FC<HeaderProps> = ({
         value={value}
         activitiesFiltered={activitiesFiltered}
         onWhatChange={onWhatChange}
+        onNavigate={onNavigate}
+        showMap={showMap}
+        onToggleMap={onToggleMap}
       />
     </>
   )

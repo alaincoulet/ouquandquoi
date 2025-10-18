@@ -17,6 +17,8 @@ import { useAuth } from "@/context/AuthContext";
 import ProductCard from '@/components/molecules/ProductCard';
 import Carousel from '@/components/ui/Carousel';
 import { haversineDistance } from '@/utils/geolocationFallback';
+import { ShareIcon } from '@heroicons/react/24/outline';
+import { detectEmailProvider, openEmailClient, type EmailClientType } from '@/utils/emailClientHelper';
 
 interface ActivityDetailProps {
   activities: Activity[];
@@ -28,6 +30,7 @@ const ActivityDetail: React.FC<ActivityDetailProps> = ({ activities, onToggleFav
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   // État favori local optimiste
   
@@ -125,26 +128,54 @@ const ActivityDetail: React.FC<ActivityDetailProps> = ({ activities, onToggleFav
   }, [activity, favLocal, onToggleFavorite]);
 
   // Suppression de l’activité
-  async function handleDelete() {
+  const handleDelete = async () => {
     if (!activity) return;
-    if (!window.confirm("Confirmer la suppression de cette activité ? Cette action est irréversible.")) return;
+    if (!window.confirm("Confirmer la suppression de cette activité ? Cette action est irréversible.")) return;
     setDeleting(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:4000"}/api/activities/${activity._id}`, {
         method: "DELETE",
       });
       if (res.ok) {
-        alert("Activité supprimée !");
-        navigate("/"); // Retour à l’accueil
+        alert("Activité supprimée avec succès.");
+        navigate("/");
       } else {
-        const error = await res.json();
-        alert(error.message || "Erreur lors de la suppression.");
+        alert("Échec de la suppression.");
       }
     } catch (err) {
-      alert("Erreur réseau lors de la suppression !");
+      alert("Erreur lors de la suppression.");
+    } finally {
+      setDeleting(false);
     }
-    setDeleting(false);
-  }
+  };
+
+  // Partage par email avec détection automatique du webmail
+  const handleShare = () => {
+    if (!activity) return;
+    
+    const currentUrl = window.location.href;
+    const subject = "Découvrez cette activité sur oùquandquoi.fr";
+    const body = `Salut mon ami,\n\nRegarde cette activité que je viens de découvrir sur ouquandquoi.fr, tu irais avec moi ?\n\n${activity.title}\n${currentUrl}\n\nÀ bientôt !`;
+    
+    // Déterminer le client email à utiliser
+    let clientType: EmailClientType = 'default';
+    
+    // 1. Si l'utilisateur est connecté et a une préférence
+    if (isAuthenticated && token) {
+      const userEmail = (window as any).__userEmail; // Stocké lors de la connexion
+      const userPreference = (window as any).__userEmailPreference;
+      
+      if (userPreference && userPreference !== 'default') {
+        clientType = userPreference;
+      } else if (userEmail) {
+        // 2. Sinon, détecter automatiquement depuis l'email
+        clientType = detectEmailProvider(userEmail);
+      }
+    }
+    
+    // Ouvrir le client email approprié
+    openEmailClient(clientType, subject, body);
+  };
 
   if (!activity) return <div className="p-8 text-red-500">Aucune activité trouvée pour l’ID : {id}</div>;
 
@@ -156,6 +187,8 @@ const ActivityDetail: React.FC<ActivityDetailProps> = ({ activities, onToggleFav
       onWhenChange={dummyOnWhenChange}
       value={dummyValue}
       onWhatChange={dummyOnWhatChange}
+      showMap={showMap}
+      onToggleMap={() => setShowMap(!showMap)}
     >
       <div className="max-w-6xl w-full mx-auto p-8">
         {/* Bouton retour */}
@@ -232,7 +265,7 @@ const ActivityDetail: React.FC<ActivityDetailProps> = ({ activities, onToggleFav
         <p className="text-lg mb-2">{activity.description}</p>
 
         {/* --- BOUTONS ACTIONS --- */}
-        <div className="flex gap-4 mb-6">
+        <div className="flex flex-wrap gap-4 mb-6">
           <button
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             onClick={() => navigate(`/deposer?edit=${activity._id}`)}
@@ -245,6 +278,17 @@ const ActivityDetail: React.FC<ActivityDetailProps> = ({ activities, onToggleFav
             disabled={deleting}
           >
             {deleting ? "Suppression..." : "Supprimer"}
+          </button>
+        </div>
+
+        {/* --- PARTAGE PAR EMAIL --- */}
+        <div className="mb-6">
+          <button
+            onClick={handleShare}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition shadow-md"
+          >
+            <ShareIcon className="w-5 h-5" />
+            <span>Partager cette activité avec vos amis</span>
           </button>
         </div>
 

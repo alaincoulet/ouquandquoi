@@ -11,6 +11,9 @@ import { CATEGORIES } from '@/utils/categories'
 import { XMarkIcon } from '@heroicons/react/24/solid'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useAuth } from "@/context/AuthContext"
+import { Link } from 'react-router-dom'
+import { MapIcon } from '@heroicons/react/24/outline'
+import GreenButton from '@/components/atoms/GreenButton'
 
 // === 1. Typage des props ===
 interface CategoryNavProps {
@@ -20,6 +23,9 @@ interface CategoryNavProps {
   value: { keyword: string; category?: string; subcategory?: string; excludedSubcategories?: string[] }
   activitiesFiltered?: any[]
   onWhatChange?: (val: { keyword: string; category?: string; subcategory?: string; excludedSubcategories?: string[] }) => void
+  onNavigate?: (navId: string, href: string) => void
+  showMap?: boolean
+  onToggleMap?: () => void
 }
 
 // === 2. Composant CategoryNav ===
@@ -29,7 +35,10 @@ export function CategoryNav({
   mode = 'horizontal',
   value,
   activitiesFiltered,
-  onWhatChange
+  onWhatChange,
+  onNavigate,
+  showMap = false,
+  onToggleMap
 }: CategoryNavProps) {
   
   // === STATE (état local) ===
@@ -179,8 +188,19 @@ export function CategoryNav({
         position: "relative"
       }}
     >
-      {/* Catégories principales */}
-      <div className={containerClass}>
+      {/* Ligne avec boutons + catégories */}
+      <div className="flex items-center justify-between px-4 py-2">
+        {/* Bouton Déposer une activité à GAUCHE */}
+        <Link to="/deposer" onClick={() => onNavigate?.('deposer', '/deposer')}>
+          <GreenButton
+            icon={<span className="text-lg font-semibold">＋</span>}
+            label="Déposer une activité"
+            ariaLabel="Déposer une activité"
+          />
+        </Link>
+
+        {/* Catégories principales au CENTRE */}
+        <div className={containerClass}>
         {CATEGORIES.map(category => (
           <div key={category.name} className="relative">
             <button
@@ -227,7 +247,19 @@ export function CategoryNav({
             )}
           </div>
         ))}
+        </div>
+
+        {/* Bouton Afficher/Masquer carte à DROITE */}
+        {onToggleMap && (
+          <GreenButton
+            icon={<MapIcon className="w-5 h-5" />}
+            label={showMap ? 'Masquer la carte' : 'Afficher la carte'}
+            onClick={onToggleMap}
+            ariaLabel={showMap ? 'Masquer la carte' : 'Afficher la carte'}
+          />
+        )}
       </div>
+
       {/* Badges feedback (anis/exclus) */}
       <div className="flex flex-wrap gap-1 justify-center mt-0 mb-2 min-h-[32px] transition-all">
         {feedbackBadges}

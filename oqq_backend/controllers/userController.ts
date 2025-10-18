@@ -260,7 +260,7 @@ export async function updateProfile(req: Request, res: Response) {
     if (!user)
       return res.status(404).json({ error: "Utilisateur non trouvé" });
 
-    const { pseudo, nom, prenom, oldPassword, newPassword } = req.body;
+    const { pseudo, nom, prenom, oldPassword, newPassword, preferredEmailClient } = req.body;
     if (pseudo && pseudo !== user.pseudo) {
       const existing = await User.findOne({ pseudo });
       if (existing && existing._id.toString() !== user._id.toString()) {
@@ -271,6 +271,11 @@ export async function updateProfile(req: Request, res: Response) {
 
     if (nom) user.nom = nom.trim();
     if (prenom) user.prenom = prenom.trim();
+    if (preferredEmailClient) {
+      if (['gmail', 'outlook', 'yahoo', 'default'].includes(preferredEmailClient)) {
+        user.preferredEmailClient = preferredEmailClient;
+      }
+    }
 
     if (oldPassword && newPassword) {
       const isMatch = await bcrypt.compare(oldPassword, user.password);
@@ -418,5 +423,312 @@ export async function getRecentlyViewed(req: Request, res: Response) {
   } catch (err) {
     console.error("Erreur getRecentlyViewed:", err);
     res.status(500).json({ error: "Erreur serveur (lecture consulté récemment)" });
+  }
+}
+
+/* ==========================================================
+   === ACTIVITÉS PROGRAMMÉES (CALENDRIER) ==================
+   ========================================================== */
+
+/**
+ * Récupère les activités programmées de l'utilisateur
+ */
+export async function getScheduledActivities(req: Request, res: Response) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+      return res.status(401).json({ error: "Non authentifié" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const user = await User.findById(decoded._id).populate("scheduledActivities.activityId");
+
+    if (!user)
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+
+    res.json({ scheduledActivities: user.scheduledActivities });
+  } catch (err) {
+    console.error("Erreur getScheduledActivities:", err);
+    res.status(500).json({ error: "Erreur serveur (lecture activités programmées)" });
+  }
+}
+
+/**
+ * Ajoute une activité programmée avec rappels
+ */
+export async function addScheduledActivity(req: Request, res: Response) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+      return res.status(401).json({ error: "Non authentifié" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const user = await User.findById(decoded._id);
+
+    if (!user)
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+
+    const { activityId, scheduledDate, reminders, notes } = req.body;
+
+    if (!activityId || !scheduledDate)
+      return res.status(400).json({ error: "activityId et scheduledDate requis" });
+
+    if (!mongoose.Types.ObjectId.isValid(activityId))
+      return res.status(400).json({ error: "activityId invalide" });
+
+    // Vérifier que l'activité est dans les favoris
+    if (!user.favoris.map(id => id.toString()).includes(activityId)) {
+      return res.status(400).json({ 
+        error: "Cette activité doit d'abord être ajoutée à vos favoris" 
+      });
+    }
+
+    // Vérifier si l'activité n'est pas déjà programmée
+    const alreadyScheduled = user.scheduledActivities.some(
+      sa => sa.activityId.toString() === activityId
+    );
+
+    if (alreadyScheduled) {
+      return res.status(400).json({ 
+        error: "Cette activité est déjà programmée dans votre calendrier" 
+      });
+    }
+
+    user.scheduledActivities.push({
+      activityId: new mongoose.Types.ObjectId(activityId),
+      scheduledDate: new Date(scheduledDate),
+      reminders: reminders || [],
+      notes: notes || "",
+      createdAt: new Date(),
+    });
+
+    await user.save();
+    res.json({ 
+      success: true, 
+      scheduledActivities: user.scheduledActivities,
+      message: "Activité programmée avec succès" 
+    });
+  } catch (err) {
+    console.error("Erreur addScheduledActivity:", err);
+    res.status(500).json({ error: "Erreur serveur (ajout activité programmée)" });
+  }
+}
+
+/**
+ * Met à jour une activité programmée
+ */
+export async function updateScheduledActivity(req: Request, res: Response) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+      return res.status(401).json({ error: "Non authentifié" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const user = await User.findById(decoded._id);
+
+    if (!user)
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+
+    const { index } = req.params;
+    const scheduledIndex = parseInt(index, 10);
+
+    if (isNaN(scheduledIndex) || scheduledIndex < 0 || scheduledIndex >= user.scheduledActivities.length) {
+      return res.status(400).json({ error: "Index invalide" });
+    }
+
+    const { scheduledDate, reminders, notes } = req.body;
+
+    if (scheduledDate) {
+      user.scheduledActivities[scheduledIndex].scheduledDate = new Date(scheduledDate);
+    }
+    if (reminders !== undefined) {
+      user.scheduledActivities[scheduledIndex].reminders = reminders;
+    }
+    if (notes !== undefined) {
+      user.scheduledActivities[scheduledIndex].notes = notes;
+    }
+
+    await user.save();
+    res.json({ 
+      success: true, 
+      scheduledActivities: user.scheduledActivities,
+      message: "Activité mise à jour avec succès" 
+    });
+  } catch (err) {
+    console.error("Erreur updateScheduledActivity:", err);
+    res.status(500).json({ error: "Erreur serveur (mise à jour activité programmée)" });
+  }
+}
+
+/**
+ * Supprime une activité programmée par son index
+ */
+export async function removeScheduledActivity(req: Request, res: Response) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+      return res.status(401).json({ error: "Non authentifié" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const user = await User.findById(decoded._id);
+
+    if (!user)
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+
+    const { index } = req.params;
+    const scheduledIndex = parseInt(index, 10);
+
+    if (isNaN(scheduledIndex) || scheduledIndex < 0 || scheduledIndex >= user.scheduledActivities.length) {
+      return res.status(400).json({ error: "Index invalide" });
+    }
+
+    user.scheduledActivities.splice(scheduledIndex, 1);
+    await user.save();
+
+    res.json({ 
+      success: true, 
+      scheduledActivities: user.scheduledActivities,
+      message: "Activité retirée du calendrier avec succès" 
+    });
+  } catch (err) {
+    console.error("Erreur removeScheduledActivity:", err);
+    res.status(500).json({ error: "Erreur serveur (suppression activité programmée)" });
+  }
+}
+
+/* ==========================================================
+   === RECHERCHES SAUVEGARDÉES =============================
+   ========================================================== */
+
+/**
+ * Génère automatiquement le nom d'une recherche à partir des filtres
+ */
+function generateSearchName(filters: any): string {
+  const parts: string[] = [];
+  
+  if (filters.where?.location) {
+    parts.push(filters.where.location);
+  }
+  
+  if (filters.when && filters.when !== "Toute l'année") {
+    parts.push(filters.when);
+  }
+  
+  if (filters.what?.keyword) {
+    parts.push(filters.what.keyword);
+  } else if (filters.what?.category) {
+    parts.push(filters.what.category);
+  }
+  
+  return parts.length > 0 ? parts.join(" • ") : "Recherche sans critère";
+}
+
+/**
+ * Récupère les recherches sauvegardées de l'utilisateur
+ */
+export async function getSavedSearches(req: Request, res: Response) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+      return res.status(401).json({ error: "Non authentifié" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const user = await User.findById(decoded._id);
+
+    if (!user)
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+
+    res.json({ savedSearches: user.savedSearches });
+  } catch (err) {
+    console.error("Erreur getSavedSearches:", err);
+    res.status(500).json({ error: "Erreur serveur (lecture recherches sauvegardées)" });
+  }
+}
+
+/**
+ * Ajoute une nouvelle recherche sauvegardée (max 3)
+ */
+export async function addSavedSearch(req: Request, res: Response) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+      return res.status(401).json({ error: "Non authentifié" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const user = await User.findById(decoded._id);
+
+    if (!user)
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+
+    const { filters } = req.body;
+    if (!filters)
+      return res.status(400).json({ error: "Filtres manquants" });
+
+    // Limite à 3 recherches sauvegardées
+    if (user.savedSearches.length >= 3) {
+      return res.status(400).json({ 
+        error: "Vous avez atteint la limite de 3 recherches sauvegardées. Veuillez en supprimer une avant d'en ajouter une nouvelle." 
+      });
+    }
+
+    const searchName = generateSearchName(filters);
+    
+    user.savedSearches.push({
+      name: searchName,
+      filters,
+      createdAt: new Date(),
+    });
+
+    await user.save();
+    res.json({ 
+      success: true, 
+      savedSearches: user.savedSearches,
+      message: "Recherche sauvegardée avec succès" 
+    });
+  } catch (err) {
+    console.error("Erreur addSavedSearch:", err);
+    res.status(500).json({ error: "Erreur serveur (ajout recherche sauvegardée)" });
+  }
+}
+
+/**
+ * Supprime une recherche sauvegardée par son index
+ */
+export async function removeSavedSearch(req: Request, res: Response) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+      return res.status(401).json({ error: "Non authentifié" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const user = await User.findById(decoded._id);
+
+    if (!user)
+      return res.status(404).json({ error: "Utilisateur non trouvé" });
+
+    const { index } = req.params;
+    const searchIndex = parseInt(index, 10);
+
+    if (isNaN(searchIndex) || searchIndex < 0 || searchIndex >= user.savedSearches.length) {
+      return res.status(400).json({ error: "Index invalide" });
+    }
+
+    user.savedSearches.splice(searchIndex, 1);
+    await user.save();
+
+    res.json({ 
+      success: true, 
+      savedSearches: user.savedSearches,
+      message: "Recherche supprimée avec succès" 
+    });
+  } catch (err) {
+    console.error("Erreur removeSavedSearch:", err);
+    res.status(500).json({ error: "Erreur serveur (suppression recherche sauvegardée)" });
   }
 }

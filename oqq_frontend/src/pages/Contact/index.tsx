@@ -19,6 +19,7 @@ export default function ContactPage() {
   const [message, setMessage] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [showMap, setShowMap] = useState(false);
 
   // Gestion fichier (max 1 fichier, 5 Mo)
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,6 +79,8 @@ export default function ContactPage() {
         navigate("/", { state: { what: val, redirectTriggered: true } })
       }
       onNavigate={handleRedirectToHome}
+      showMap={showMap}
+      onToggleMap={() => setShowMap(!showMap)}
     >
       <div className="min-h-[70vh] flex flex-col items-center justify-center py-8 px-4">
         <h1 className="text-3xl font-bold text-gray-800 mb-2 text-center">
