@@ -1,19 +1,16 @@
 #!/bin/bash
 
 # === Script démarrage Docker + navigateur ===
-# Lance frontend + backend dans Docker et ouvre 2 onglets navigateur
-
-echo ">>> Nettoyage du cache Docker..."
-docker system prune -f
+# Lance frontend + backend dans Docker et ouvre 2 onglets navigateur (Windows 11 compatible)
 
 echo ">>> Lancement des conteneurs Docker..."
 docker-compose up --build -d
 
-# Pause courte pour s'assurer que les services démarrent
-sleep 10
+# Pause de 20 secondes pour laisser le temps aux services de démarrer
+sleep 20
 
 echo ">>> Ouverture du frontend (http://localhost:8080)"
-xdg-open "http://localhost:8080" >/dev/null 2>&1 &
+start "" "http://localhost:8080"
 
 echo ">>> Ouverture du backend API (http://localhost:4000)"
-xdg-open "http://localhost:4000" >/dev/null 2>&1 &
+start "" "http://localhost:4000"
