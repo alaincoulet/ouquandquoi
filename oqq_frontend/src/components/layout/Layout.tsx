@@ -13,6 +13,7 @@ import Footer from '@/components/layout/Footer'
 interface LayoutProps {
   children: React.ReactNode
   className?: string
+  fullWidth?: boolean // Mode pleine largeur pour la vue carte
   favoritesActive?: boolean
   onToggleFavorites?: () => void
   where: {
@@ -39,11 +40,14 @@ interface LayoutProps {
   }) => void
   activitiesFiltered?: any[]
   onNavigate?: (navId: string, href: string) => void
+  showMap?: boolean
+  onToggleMap?: () => void
 }
 
 const Layout: React.FC<LayoutProps> = ({
   children,
   className = '',
+  fullWidth = false,
   favoritesActive,
   onToggleFavorites,
   where,
@@ -53,7 +57,9 @@ const Layout: React.FC<LayoutProps> = ({
   value,
   onWhatChange,
   activitiesFiltered,
-  onNavigate
+  onNavigate,
+  showMap = false,
+  onToggleMap
 }) => {
   // ==========================================================
   // === STATE (references) ===================================
@@ -72,13 +78,14 @@ const Layout: React.FC<LayoutProps> = ({
     <div
       className={`relative flex flex-col font-quicksand overflow-x-hidden ${className}`}
       style={{
-        backgroundImage: "url('/pub_adrar.jpg')",
+        backgroundImage: fullWidth ? 'none' : "url('/pub_adrar.jpg')",
+        backgroundColor: fullWidth ? '#f9fafb' : 'transparent',
         backgroundSize: 'auto',
         backgroundPosition: '0 0',
         backgroundAttachment: 'fixed',
         minHeight: '100dvh',
-        paddingTop: '20vh',
-        paddingBottom: '25vh',
+        paddingTop: fullWidth ? '0' : '20vh',
+        paddingBottom: fullWidth ? '0' : '25vh',
       }}
     >
       {/* Sentinel for sticky header trigger */}
@@ -97,28 +104,30 @@ const Layout: React.FC<LayoutProps> = ({
         onWhatChange={onWhatChange}
         activitiesFiltered={activitiesFiltered}
         onNavigate={onNavigate}
+        showMap={showMap}
+        onToggleMap={onToggleMap}
       />
 
       {/* Main content container */}
       <div
-        className="
-          z-40
+        className={`
+          z-30
           flex flex-col
-          mx-auto
-          w-full
-          max-w-7xl
-          bg-gray-50
-          rounded-bl-2xl
-          rounded-br-2xl
-          shadow-xl
-          border border-gray-200
-        "
+          ${fullWidth ? 'w-full' : 'mx-auto w-full max-w-7xl'}
+          ${fullWidth ? 'bg-transparent' : 'bg-gray-50'}
+          ${fullWidth ? '' : 'rounded-bl-2xl rounded-br-2xl shadow-xl border border-gray-200'}
+        `}
       >
-        <main role="main" aria-label="Contenu principal" className="flex-1 w-full">
+        <main role="main" aria-label="Contenu principal" className={`flex-1 w-full ${fullWidth ? 'overflow-hidden' : 'overflow-visible'}`}>
           {children}
         </main>
-        <Footer />
+        {!fullWidth && <Footer />}
       </div>
+      {fullWidth && (
+        <div className="w-full">
+          <Footer />
+        </div>
+      )}
     </div>
   )
 }

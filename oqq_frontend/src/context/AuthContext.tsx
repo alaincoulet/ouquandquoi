@@ -17,6 +17,7 @@ export interface AuthUser {
   nom?: string;
   prenom?: string;
   role?: string;
+  preferredEmailClient?: "gmail" | "outlook" | "yahoo" | "default";
 }
 
 // Type du contexte

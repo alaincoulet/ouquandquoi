@@ -1,28 +1,28 @@
 // src/pages/Auth/ProfilePage.tsx
 /**
- * Page profil utilisateur (oùquandquoi.fr)
- * - Affiche/modifie pseudo, nom, prénom, mot de passe
- * - Bouton de déconnexion
- * - Bouton "Supprimer mon compte" avec confirmation sécurisée (plus de question secrète)
- * - ⚠️ Fix UI : le conteneur parent est positionné en `relative` et la croix a un `z-10`
+ * Chemin : src/pages/Auth/ProfilePage.tsx
+ * Rôle : Page profil utilisateur — affichage et modification des informations de profil,
+ *        gestion de la géolocalisation, déconnexion et suppression du compte.
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useGeolocation } from "@/context/GeolocationContext";
+import { detectEmailProvider, getEmailClientLabel, type EmailClientType } from "@/utils/emailClientHelper";
 
 export default function ProfilePage() {
   const { user, token, login, logout } = useAuth();
   const navigate = useNavigate();
 
-  // --- Suppression de compte (sans question secrète)
+  // ==========================================================
+  // === ÉTAT (useState, useEffect, useContext, etc.) =========
+  // ==========================================================
   const [showDelete, setShowDelete] = useState(false);
   const [deleteStatus, setDeleteStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [accountDeleted, setAccountDeleted] = useState(false);
 
-  // --- États édition pseudo, nom, prénom
   const [editPseudo, setEditPseudo] = useState(false);
   const [pseudo, setPseudo] = useState(user?.pseudo ?? "");
   const [pseudoStatus, setPseudoStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -38,22 +38,31 @@ export default function ProfilePage() {
   const [prenomStatus, setPrenomStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [prenomError, setPrenomError] = useState<string | null>(null);
 
-  // --- États édition mot de passe
   const [editPassword, setEditPassword] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordStatus, setPasswordStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-xl text-gray-600">Vous devez être connecté pour voir votre profil.</p>
-      </div>
-    );
-  }
+  const [editEmailClient, setEditEmailClient] = useState(false);
+  const [preferredEmailClient, setPreferredEmailClient] = useState<EmailClientType>(
+    (user as any)?.preferredEmailClient || detectEmailProvider(user?.email || '')
+  );
+  const [emailClientStatus, setEmailClientStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [emailClientError, setEmailClientError] = useState<string | null>(null);
 
-  // PATCH profil API — Pseudo
+  // Redirection automatique si utilisateur non connecté
+  useEffect(() => {
+    if (!user) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
+
+  if (!user) return null;
+
+  // ==========================================================
+  // === COMPORTEMENT (fonctions, callbacks, logique métier) ===
+  // ==========================================================
   const handleSavePseudo = async () => {
     setPseudoStatus("loading");
     setPseudoError(null);
@@ -81,7 +90,6 @@ export default function ProfilePage() {
     }
   };
 
-  // PATCH profil API — Nom
   const handleSaveNom = async () => {
     setNomStatus("loading");
     setNomError(null);
@@ -109,7 +117,6 @@ export default function ProfilePage() {
     }
   };
 
-  // PATCH profil API — Prénom
   const handleSavePrenom = async () => {
     setPrenomStatus("loading");
     setPrenomError(null);
@@ -137,7 +144,6 @@ export default function ProfilePage() {
     }
   };
 
-  // PATCH profil API — Mot de passe
   const handleSavePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordStatus("loading");
@@ -170,7 +176,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Suppression du compte utilisateur : simple confirmation (plus de question secrète)
   const handleDeleteAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     setDeleteStatus("loading");
@@ -193,6 +198,7 @@ export default function ProfilePage() {
       setShowDelete(false);
       setAccountDeleted(true);
       setTimeout(() => {
+        navigate("/", { replace: true });
         logout();
       }, 2500);
     } catch (err) {
@@ -201,11 +207,52 @@ export default function ProfilePage() {
     }
   };
 
+  const handleSaveEmailClient = async () => {
+    setEmailClientStatus("loading");
+    setEmailClientError(null);
+    try {
+      const res = await fetch("/api/users/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ preferredEmailClient }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEmailClientStatus("error");
+        setEmailClientError(data?.error || "Erreur lors de la modification de la préférence.");
+        return;
+      }
+      setEmailClientStatus("success");
+      login(token!, { ...user, preferredEmailClient });
+      
+      // Stocker globalement pour la fonction de partage
+      (window as any).__userEmail = user.email;
+      (window as any).__userEmailPreference = preferredEmailClient;
+      
+      setEditEmailClient(false);
+    } catch (err) {
+      setEmailClientStatus("error");
+      setEmailClientError("Erreur réseau ou serveur.");
+    }
+  };
+
+  // Initialiser les variables globales au chargement
+  useEffect(() => {
+    if (user) {
+      (window as any).__userEmail = user.email;
+      (window as any).__userEmailPreference = (user as any)?.preferredEmailClient || 'default';
+    }
+  }, [user]);
+
+  // ==========================================================
+  // === AFFICHAGE (rendu JSX, mapping état => UI) ===========
+  // ==========================================================
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      {/* parent positionné pour l'absolu de la croix */}
       <div className="relative max-w-md w-full bg-white p-8 rounded-2xl shadow-xl">
-        {/* === CROIX FERMETURE en haut à droite === */}
         <button
           className="absolute top-3 right-3 z-10 text-gray-400 hover:text-red-500 text-2xl font-bold p-1 rounded-full transition"
           onClick={() => navigate("/")}
@@ -217,13 +264,9 @@ export default function ProfilePage() {
         </button>
         <h1 className="text-2xl font-bold mb-6">Mon profil</h1>
         <div className="space-y-4 mb-6">
-
-          {/* Email */}
           <div>
             <strong>Email :</strong> {user.email}
           </div>
-
-          {/* Pseudo (édition inline) */}
           <div>
             <strong>Pseudo :</strong>{" "}
             {!editPseudo ? (
@@ -273,8 +316,6 @@ export default function ProfilePage() {
               </span>
             )}
           </div>
-
-          {/* Nom (édition inline) */}
           <div>
             <strong>Nom :</strong>{" "}
             {!editNom ? (
@@ -324,8 +365,6 @@ export default function ProfilePage() {
               </span>
             )}
           </div>
-
-          {/* Prénom (édition inline) */}
           <div>
             <strong>Prénom :</strong>{" "}
             {!editPrenom ? (
@@ -375,16 +414,11 @@ export default function ProfilePage() {
               </span>
             )}
           </div>
-
           <div><strong>Rôle :</strong> {user.role}</div>
-          {/* --- Géolocalisation utilisateur --- */}
           <div className="mt-2">
             <GeolocToggle />
           </div>
         </div>
-
-        {/* Formulaire de changement de mot de passe */
-        }
         <div className="mb-4">
           {!editPassword ? (
             <button
@@ -450,8 +484,63 @@ export default function ProfilePage() {
             </form>
           )}
         </div>
-
-        {/* Lien: Changer de rôle ? */}
+        <div className="mb-6">
+          {/* === Préférence de messagerie === */}
+          <strong>Client email préféré pour le partage :</strong>{" "}
+          {!editEmailClient ? (
+            <>
+              <span className="text-gray-700">{getEmailClientLabel(preferredEmailClient)}</span>
+              <button
+                className="ml-2 text-blue-600 text-xs underline"
+                onClick={() => {
+                  setEditEmailClient(true);
+                  setEmailClientStatus("idle");
+                  setEmailClientError(null);
+                }}
+              >
+                Modifier
+              </button>
+              {emailClientStatus === "success" && (
+                <span className="ml-2 text-green-600 text-xs">Modifié !</span>
+              )}
+              {emailClientStatus === "error" && (
+                <span className="ml-2 text-red-600 text-xs">{emailClientError}</span>
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                Détermine quel client email s'ouvrira lorsque vous partagerez une activité.
+              </p>
+            </>
+          ) : (
+            <div className="mt-2 space-y-2">
+              <select
+                className="w-full border rounded p-2 text-sm"
+                value={preferredEmailClient}
+                onChange={(e) => setPreferredEmailClient(e.target.value as EmailClientType)}
+              >
+                <option value="default">Application mail par défaut (mailto:)</option>
+                <option value="gmail">Gmail</option>
+                <option value="outlook">Outlook / Hotmail</option>
+                <option value="yahoo">Yahoo Mail</option>
+              </select>
+              <div className="flex gap-2">
+                <button
+                  className="bg-blue-600 text-white px-3 py-1 rounded text-xs"
+                  onClick={handleSaveEmailClient}
+                  disabled={emailClientStatus === "loading"}
+                >
+                  Sauvegarder
+                </button>
+                <button
+                  className="text-gray-500 text-xs underline"
+                  onClick={() => setEditEmailClient(false)}
+                  type="button"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
         <div className="mb-6">
           <button
             type="button"
@@ -461,13 +550,13 @@ export default function ProfilePage() {
             Changer de rôle ?
           </button>
         </div>
-
-        {/* Bouton de déconnexion */}
+        {/* Correction : navigate avant logout */}
         <div className="mt-6 flex justify-center">
           <button
             className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl font-semibold shadow transition"
             onClick={() => {
               if (window.confirm("Voulez-vous vraiment vous déconnecter ?")) {
+                navigate("/", { replace: true });
                 logout();
               }
             }}
@@ -475,8 +564,6 @@ export default function ProfilePage() {
             Se déconnecter
           </button>
         </div>
-
-        {/* Bouton de suppression du compte */}
         <div className="mt-8 flex justify-center">
           <button
             className="bg-gray-200 hover:bg-red-500 hover:text-white text-red-700 font-semibold px-4 py-2 rounded-xl transition shadow"
@@ -485,8 +572,6 @@ export default function ProfilePage() {
             Supprimer mon compte
           </button>
         </div>
-
-        {/* Dialogue/modal de suppression du compte (confirmation simple) */}
         {showDelete && (
           <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
             <div className="bg-white p-6 rounded-2xl max-w-sm w-full shadow-2xl relative">
@@ -536,7 +621,6 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
-
         {accountDeleted && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
             <div className="bg-white p-6 rounded-2xl max-w-sm w-full shadow-2xl">
@@ -550,13 +634,8 @@ export default function ProfilePage() {
   );
 }
 
-/** 
- * Composant interne : Bouton toggle géolocalisation (profil utilisateur)
- * Affiche l’état, active/désactive la position, feedback UX/RGPD.
- */
 function GeolocToggle() {
   const { active, lat, lon, error, loading, requestGeolocation, clearGeolocation } = useGeolocation();
-
   return (
     <div className="flex flex-col gap-2">
       {active && lat && lon ? (

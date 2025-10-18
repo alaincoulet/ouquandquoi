@@ -112,7 +112,7 @@ export function FilterWhenPanel({ value, onChange, onClose }: FilterWhenPanelPro
   const endLabel = range?.to ? formatDate(range.to) : 'Sélectionner la date de fin'
 
   return (
-    <div className="absolute top-full left-0 bg-white border shadow rounded-lg p-4 z-20 w-[450px]">
+    <div className="absolute top-full left-0 bg-white border shadow rounded-lg p-4 z-50 w-[450px]">
       <div className="flex justify-between items-center mb-2">
         <span className="font-semibold">Quand ?</span>
         <button onClick={() => { lastFromRef.current = undefined; onClose() }} className="text-xs text-gray-500">Fermer</button>

@@ -1,10 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 
 export default function MentionsLegales() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showMap, setShowMap] = useState(false);
 
   // Handler général pour renvoyer vers la home avec state
   const handleRedirectToHome = (navId: string, href: string) => {
@@ -36,6 +37,8 @@ export default function MentionsLegales() {
         navigate("/", { state: { what: val, redirectTriggered: true } })
       }
       onNavigate={handleRedirectToHome}
+      showMap={showMap}
+      onToggleMap={() => setShowMap(!showMap)}
     >
       <div className="max-w-3xl mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-4">Mentions légales</h1>

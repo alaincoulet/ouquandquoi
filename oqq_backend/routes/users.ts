@@ -22,7 +22,14 @@ import {
   getPendingUsers,
   validateUser,
   addRecentlyViewed,
-  getRecentlyViewed
+  getRecentlyViewed,
+  getSavedSearches,
+  addSavedSearch,
+  removeSavedSearch,
+  getScheduledActivities,
+  addScheduledActivity,
+  updateScheduledActivity,
+  removeScheduledActivity
 } from "../controllers/userController";
 
 import { verifyToken } from "../middleware/verifyToken";
@@ -92,5 +99,34 @@ router.patch("/recently-viewed/:activityId", verifyToken, addRecentlyViewed);
 
 // Get the 10 most recently viewed activities
 router.get("/recently-viewed", verifyToken, getRecentlyViewed);
+
+// ==========================================================
+// === SAVED SEARCHES =======================================
+// ==========================================================
+
+// Get user's saved searches
+router.get("/saved-searches", verifyToken, getSavedSearches);
+
+// Add a new saved search (max 3)
+router.post("/saved-searches", verifyToken, addSavedSearch);
+
+// Remove a saved search by index
+router.delete("/saved-searches/:index", verifyToken, removeSavedSearch);
+
+// ==========================================================
+// === SCHEDULED ACTIVITIES (CALENDAR) ======================
+// ==========================================================
+
+// Get user's scheduled activities
+router.get("/scheduled-activities", verifyToken, getScheduledActivities);
+
+// Add a scheduled activity with reminders
+router.post("/scheduled-activities", verifyToken, addScheduledActivity);
+
+// Update a scheduled activity
+router.patch("/scheduled-activities/:index", verifyToken, updateScheduledActivity);
+
+// Remove a scheduled activity
+router.delete("/scheduled-activities/:index", verifyToken, removeScheduledActivity);
 
 export default router;

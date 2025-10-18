@@ -5,7 +5,7 @@
 // - Centre le formulaire <ActivityForm />
 // ==========================================================
 
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import ActivityForm from "@/components/activities/ActivityForm";
@@ -13,6 +13,7 @@ import ActivityForm from "@/components/activities/ActivityForm";
 export default function DeposerActivitePage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [showMap, setShowMap] = useState(false);
 
   // Navigation intelligente (héritée du modèle CGU)
   const handleRedirectToHome = (navId: string, href: string) => {
@@ -43,6 +44,8 @@ export default function DeposerActivitePage() {
         navigate("/", { state: { what: val, redirectTriggered: true } })
       }
       onNavigate={handleRedirectToHome}
+      showMap={showMap}
+      onToggleMap={() => setShowMap(!showMap)}
     >
       <div className="max-w-6xl w-full mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold mb-8 text-center">

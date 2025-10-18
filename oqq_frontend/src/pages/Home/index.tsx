@@ -17,7 +17,11 @@ import { WhereFilter } from "@/types/search";
 import { useGeolocation } from "@/context/GeolocationContext";
 import { haversineDistance } from "@/utils/geolocationFallback";
 import { useAuth } from "@/context/AuthContext";
-import { getRecentlyViewed } from "@/services/user";
+import { getRecentlyViewed } from '@/services/user'
+import axios from 'axios'
+import { BookmarkIcon } from '@heroicons/react/24/solid';
+import { MapIcon } from '@heroicons/react/24/outline';
+import MapView from '@/components/organisms/MapView';
 
 // -------------------
 // UTILS (date helpers)
@@ -95,6 +99,8 @@ const HomePage: React.FC<HomePageProps> = ({
   // ====================
   const [recentlyViewed, setRecentlyViewed] = useState<Activity[]>([]);
   const { token, isAuthenticated } = useAuth();
+  const [savingSearch, setSavingSearch] = useState(false);
+  const [showMap, setShowMap] = useState(false); // Afficher/masquer la carte
 
   // ====================
   // Behavior
@@ -137,31 +143,69 @@ const HomePage: React.FC<HomePageProps> = ({
         )
       : [];
 
+  const API_BASE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api`;
+
+  const handleSaveSearch = async () => {
+    if (!isAuthenticated || !token) {
+      alert('Veuillez vous connecter pour sauvegarder une recherche');
+      return;
+    }
+
+    setSavingSearch(true);
+    try {
+      const filters = {
+        where: whereFilter,
+        when: whenFilter,
+        what: value,
+      };
+
+      await axios.post(
+        `${API_BASE_URL}/users/saved-searches`,
+        { filters },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert('Recherche sauvegardée avec succès!');
+    } catch (err: any) {
+      console.error('Erreur lors de la sauvegarde de la recherche:', err);
+      const errorMessage = err.response?.data?.error || 'Impossible de sauvegarder la recherche';
+      alert(errorMessage);
+    } finally {
+      setSavingSearch(false);
+    }
+  };
+
   // Section blocks for carousels
   const sectionFavorites =
-    favoritesActive && (
-      <>
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-2xl font-semibold text-black flex items-center">
-            Mes favoris
-            <span className="text-lg font-normal text-gray-500 ml-2">
-              ({favorites.length} {favorites.length > 1 ? "activités" : "activité"})
-            </span>
-          </h3>
-        </div>
-        <div className="mb-8">
-          <Carousel>
-            {favorites.map((activity) => (
-              <ProductCard
-                key={activity._id}
-                product={{ ...activity, isFavorite: true }}
-                onToggleFavorite={onToggleFavorite}
-              />
-            ))}
-          </Carousel>
-        </div>
-      </>
-    );
+  favoritesActive && isAuthenticated ? (
+    <>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-2xl font-semibold text-black flex items-center">
+          Mes favoris
+          <span className="text-lg font-normal text-gray-500 ml-2">
+            ({favorites.length} {favorites.length > 1 ? "activités" : "activité"})
+          </span>
+        </h3>
+      </div>
+      <div className="mb-8">
+        <Carousel>
+          {favorites.map((activity) => (
+            <ProductCard
+              key={activity._id}
+              product={{ ...activity, isFavorite: true }}
+              onToggleFavorite={onToggleFavorite}
+            />
+          ))}
+        </Carousel>
+      </div>
+    </>
+  ) : favoritesActive && !isAuthenticated ? (
+    <div className="mb-8 text-center">
+      <div className="inline-flex items-center px-5 py-4 bg-yellow-50 rounded-xl border border-yellow-300 text-yellow-800 text-base font-medium shadow">
+        Veuillez vous connecter ou créer un compte afin de pouvoir sélectionner et afficher vos favoris
+      </div>
+    </div>
+  ) : null;
 
   const sectionNearby =
     nearbyActivities.length > 0 && (
@@ -238,7 +282,7 @@ const HomePage: React.FC<HomePageProps> = ({
   // ====================
   // Render
   // ====================
-  return (
+   return (
     <Layout
       favoritesActive={favoritesActive}
       onToggleFavorites={onToggleFavorites}
@@ -249,6 +293,8 @@ const HomePage: React.FC<HomePageProps> = ({
       value={value}
       onWhatChange={onWhatChange}
       activitiesFiltered={filteredResults}
+      showMap={showMap}
+      onToggleMap={() => setShowMap(!showMap)}
     >
       {/* --- Main Home content --- */}
       <div className="flex flex-col items-center mb-5 mt-5">
@@ -268,7 +314,20 @@ const HomePage: React.FC<HomePageProps> = ({
         </span>
       </div>
 
-      <main className="container mx-auto px-4 py-8">
+      <div className="px-4 py-8">
+        {/* Carte avec panneau latéral (si activée) */}
+        {showMap && (
+          <section className="mb-8">
+            <div className="w-full h-[500px] rounded-lg overflow-hidden shadow-lg border border-gray-200">
+              <MapView 
+                activities={showRechercheActive && filteredNotExpired.length > 0 ? filteredNotExpired : onlineActivities} 
+                onToggleFavorite={onToggleFavorite} 
+                userFavorites={userFavorites} 
+              />
+            </div>
+          </section>
+        )}
+
         {/* --- Active search filter carousel --- */}
         {showRechercheActive && filteredNotExpired.length > 0 && (
           <section className="mb-12">
@@ -280,27 +339,40 @@ const HomePage: React.FC<HomePageProps> = ({
                   {filteredNotExpired.length > 1 ? "activités" : "activité"})
                 </span>
               </h3>
-              <button
-                className="ml-4 px-3 py-1 rounded bg-gray-100 text-sm text-gray-700 hover:bg-gray-200"
-                onClick={() => {
-                  onWhereChange({
-                    label: "",
-                    location: "",
-                    distance: undefined,
-                    lat: undefined,
-                    lon: undefined,
-                  });
-                  onWhenChange("");
-                  onWhatChange({
-                    keyword: "",
-                    category: "",
-                    subcategory: "",
-                    excludedSubcategories: [],
-                  });
-                }}
-              >
-                Réinitialiser
-              </button>
+              <div className="flex gap-2">
+                {isAuthenticated && (
+                  <button
+                    className="px-3 py-1 rounded bg-green-600 text-white text-sm hover:bg-green-700 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleSaveSearch}
+                    disabled={savingSearch}
+                    title="Sauvegarder cette recherche (max 3)"
+                  >
+                    <BookmarkIcon className="w-4 h-4" />
+                    {savingSearch ? 'Sauvegarde...' : 'Sauvegarder'}
+                  </button>
+                )}
+                <button
+                  className="px-3 py-1 rounded bg-gray-100 text-sm text-gray-700 hover:bg-gray-200 transition"
+                  onClick={() => {
+                    onWhereChange({
+                      label: "",
+                      location: "",
+                      distance: undefined,
+                      lat: undefined,
+                      lon: undefined,
+                    });
+                    onWhenChange("");
+                    onWhatChange({
+                      keyword: "",
+                      category: "",
+                      subcategory: "",
+                      excludedSubcategories: [],
+                    });
+                  }}
+                >
+                  Réinitialiser
+                </button>
+              </div>
             </div>
             <Carousel>
               {filteredNotExpired.map((activity) => (
@@ -378,7 +450,7 @@ const HomePage: React.FC<HomePageProps> = ({
             </Carousel>
           </section>
         )}
-      </main>
+      </div>
     </Layout>
   );
 };

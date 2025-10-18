@@ -156,7 +156,7 @@ export function FilterWhatPanel({
   }
 
   return (
-    <div className="absolute top-full left-0 bg-white border shadow rounded-lg z-20 w-[370px] min-w-[330px] flex flex-col" style={{ maxHeight: "none" }}>
+    <div className="absolute top-full left-0 bg-white border shadow rounded-lg z-50 w-[370px] min-w-[330px] flex flex-col" style={{ maxHeight: "none" }}>
       {/* Header + champ de recherche */}
       <div className="sticky top-0 bg-white p-4 z-10 flex flex-col">
         <div className="flex justify-between items-center mb-2">

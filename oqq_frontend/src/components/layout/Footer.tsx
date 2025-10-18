@@ -30,7 +30,7 @@ const Footer: React.FC = () => {
       <Container
         size="xl"
         padding="md"
-        className="rounded-b-2xl shadow-xl border border-gray-200 bg-gray-50"
+        className="bg-gray-50"
       >
         <div className="space-y-4">
           {/* Logo + tagline with space-around */}
