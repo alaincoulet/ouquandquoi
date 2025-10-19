@@ -50,7 +50,7 @@ const Footer: React.FC = () => {
               </span>
             </Link>
             <p className="text-xl sm:text-2xl font-bold text-green-600">
-              Le partenaire de votre temps libre...
+              Partenaire de votre temps libre...
             </p>
           </div>
 

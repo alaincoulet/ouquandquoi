@@ -16,7 +16,7 @@ export interface AuthRequest extends Request {
   user?: {
     id: string;
     email: string;
-    role: "admin" | "moderator" | "advertiser" | "user" | "pending" | "guest";
+    role: "admin" | "moderator" | "advertiser" | "user" | "pending";
     [key: string]: any;
   };
 }

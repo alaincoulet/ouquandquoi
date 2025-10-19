@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from
 
 // Auth et Layout
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { useGeolocation } from "@/context/GeolocationContext";
 
 // RGPD
 const CookieConsent = React.lazy(() => import("@/components/rgpd/CookieConsent"));
@@ -334,16 +335,31 @@ const AppRoutes: React.FC = () => {
   );
 };
 
-export default function App() {
-  const [geoActive, setGeoActive] = useState(false);
-  const toggleGeo = () => setGeoActive(v => !v);
+/**
+ * Composant wrapper pour le bouton de géolocalisation
+ * Utilise le GeolocationContext pour gérer l'état
+ */
+const GeoButtonWrapper: React.FC = () => {
+  const { active, requestGeolocation, clearGeolocation } = useGeolocation();
 
+  const handleToggle = () => {
+    if (active) {
+      clearGeolocation();
+    } else {
+      requestGeolocation();
+    }
+  };
+
+  return <GeoFloatingButton isActive={active} onClick={handleToggle} />;
+};
+
+export default function App() {
   return (
     <AuthProvider>
       <Router>
         <AppRoutes />
         <AdminFloatingButton />
-        <GeoFloatingButton isActive={geoActive} onClick={toggleGeo} />
+        <GeoButtonWrapper />
         <ClientOnly>
           <ErrorBoundary>
             <Suspense fallback={null}>
