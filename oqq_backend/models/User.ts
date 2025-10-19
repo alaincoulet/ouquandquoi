@@ -48,7 +48,7 @@ export interface IUser extends Document {
     notes?: string;
     createdAt: Date;
   }[];
-  role: "admin" | "moderator" | "advertiser" | "user" | "pending" | "guest";
+  role: "admin" | "moderator" | "advertiser" | "user" | "pending";
   certificationStatus: "none" | "pending" | "validated" | "rejected";
   officialNumber?: string;
   structureType?: "entreprise" | "association" | "mairie" | "autre";
@@ -129,7 +129,7 @@ const UserSchema = new Schema<IUser>(
     // === Roles and permissions ===
     role: {
       type: String,
-      enum: ["admin", "moderator", "advertiser", "user", "pending", "guest"],
+      enum: ["admin", "moderator", "advertiser", "user", "pending"],
       default: "pending",
     },
     certificationStatus: {

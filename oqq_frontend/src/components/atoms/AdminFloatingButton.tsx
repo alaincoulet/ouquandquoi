@@ -17,7 +17,7 @@ const AdminFloatingButton: React.FC = () => {
   return (
     <div className="fixed top-4 right-4 z-50">
       <Link
-        to="/admin/validation-users"
+        to="/admin"
         className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold no-underline hover:no-underline transition duration-300 hover:brightness-105 hover:scale-[1.02] hover:text-white"
         aria-label="Administration"
         style={{ minWidth: 180, justifyContent: 'center' }}

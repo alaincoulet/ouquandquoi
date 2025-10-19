@@ -87,7 +87,7 @@ export async function loginUser(req: Request, res: Response) {
       return res.status(401).json({ error: "Mot de passe invalide." });
 
     // Comptes non validés
-    if (["pending", "guest"].includes(user.role)) {
+    if (user.role === "pending") {
       return res.status(403).json({
         error: "Votre compte est en attente de validation par un administrateur.",
       });
