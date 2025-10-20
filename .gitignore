@@ -29,9 +29,6 @@ arbo_frontend.txt
 arbo_backend.txt
 arbo_*.txt
 export_*.zip
-rapport_frontend.sh
-rapport_backend.sh
-rapport_*.sh
 localhost_*.html
 localhost_*.json
 
