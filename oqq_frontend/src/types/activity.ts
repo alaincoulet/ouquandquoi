@@ -11,6 +11,17 @@
  * - Utilisé partout côté frontend pour affichage, favori, détail, etc.
  * - 100% synchronisé avec le backend natif Mongoose/MongoDB.
  */
+export interface ActivityUser {
+  /** Prénom de l’utilisateur (optionnel) */
+  firstName?: string;
+  /** Nom de famille de l’utilisateur (optionnel) */
+  lastName?: string;
+  /** Pseudo public affichable (optionnel) */
+  pseudo?: string;
+  /** Email (optionnel, rarement exposé côté front) */
+  email?: string;
+}
+
 export interface Activity {
   /** Identifiant natif MongoDB (obligatoire, format ObjectId sous forme string) */
   _id: string;
@@ -20,8 +31,8 @@ export interface Activity {
   description: string;
   /** Lieu/ville de l’activité (obligatoire) */
   location: string;
-  /** Utilisateur créateur (stocké en clair : nom/pseudo/email ou userId, selon import) */
-  user?: string;
+  /** Utilisateur créateur (string legacy ou objet peuplé depuis MongoDB) */
+  user?: string | ActivityUser;
 
   /** Chemin image relative serveur (ex : "/images/xxxx.jpg") */
   image?: string;

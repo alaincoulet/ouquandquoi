@@ -10,15 +10,16 @@
 // ==========================================================
 
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import Layout from '@/components/layout/Layout';
 import { useParams, useNavigate } from "react-router-dom";
-import { Activity } from '@/types/activity';
-import { useAuth } from "@/context/AuthContext";
+
+import Layout from '@/components/layout/Layout';
 import ProductCard from '@/components/molecules/ProductCard';
 import Carousel from '@/components/ui/Carousel';
+import { useAuth } from "@/context/AuthContext";
+import { Activity } from '@/types/activity';
 import { haversineDistance } from '@/utils/geolocationFallback';
-import { ShareIcon } from '@heroicons/react/24/outline';
 import { detectEmailProvider, openEmailClient, type EmailClientType } from '@/utils/emailClientHelper';
+import { ShareIcon } from '@heroicons/react/24/outline';
 
 interface ActivityDetailProps {
   activities: Activity[];
@@ -27,6 +28,7 @@ interface ActivityDetailProps {
 }
 
 const ActivityDetail: React.FC<ActivityDetailProps> = ({ activities, onToggleFavorite, userFavorites }) => {
+  // === ÉTAT (useState, useEffect, useContext, etc.) ===
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
@@ -53,6 +55,22 @@ const ActivityDetail: React.FC<ActivityDetailProps> = ({ activities, onToggleFav
   // Recherche activité dans liste MongoDB
   const activity = useMemo(() => activities.find((a) => a._id === id), [activities, id]);
 
+  const authorDisplay = useMemo(() => {
+    if (!activity?.user) return null;
+    if (typeof activity.user === "string") {
+      return activity.user.trim() || null;
+    }
+
+    const { pseudo, firstName, lastName, email } = activity.user;
+    if (pseudo) return pseudo;
+
+    const nameParts = [firstName, lastName].filter(Boolean);
+    if (nameParts.length) return nameParts.join(" ");
+
+    return email ?? null;
+  }, [activity]);
+
+  // === COMPORTEMENT (fonctions, callbacks, logique métier) ===
   // Synchronise favLocal avec favoris globaux (userFavorites)
   useEffect(() => {
     if (id && userFavorites) {
@@ -177,6 +195,7 @@ const ActivityDetail: React.FC<ActivityDetailProps> = ({ activities, onToggleFav
     openEmailClient(clientType, subject, body);
   };
 
+  // === AFFICHAGE (rendu JSX, mapping état => UI) ===
   if (!activity) return <div className="p-8 text-red-500">Aucune activité trouvée pour l’ID : {id}</div>;
 
   return (
@@ -297,9 +316,9 @@ const ActivityDetail: React.FC<ActivityDetailProps> = ({ activities, onToggleFav
           <span className="font-semibold">Lieu :</span> {activity.location}
         </div>
         {/* Utilisateur */}
-        {activity.user && (
+        {authorDisplay && (
           <div className="mb-2 text-gray-600">
-            <span className="font-semibold">Publié par :</span> {activity.user}
+            <span className="font-semibold">Publié par :</span> {authorDisplay}
           </div>
         )}
         {/* Date de création */}

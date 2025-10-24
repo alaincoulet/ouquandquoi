@@ -11,6 +11,8 @@
 
 import { Request, Response } from "express";
 import { AuthRequest } from "../middleware/verifyToken";
+import mongoose from "mongoose";
+
 import Activity, { IActivity } from "../models/Activity";
 
 /* ==========================================================
@@ -123,13 +125,25 @@ export async function getAllActivities(req: Request, res: Response) {
 export async function getActivityById(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    if (!id || id.length !== 24)
-      return res.status(400).json({ error: "Identifiant invalide." });
+    if (!id)
+      return res.status(400).json({ error: "Identifiant manquant." });
 
-    const activity = await Activity.findById(id).populate(
-      "user",
-      "firstName lastName pseudo"
-    );
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      const activityAlt = await Activity.findOne({ _id: id })
+        .populate("user", "firstName lastName pseudo")
+        .lean();
+      if (!activityAlt)
+        return res.status(404).json({ error: "Activité non trouvée." });
+
+      return res.json({ activity: activityAlt });
+    }
+
+    const activity = await Activity.findById(id)
+      .populate(
+        "user",
+        "firstName lastName pseudo"
+      )
+      .lean();
     if (!activity)
       return res.status(404).json({ error: "Activité non trouvée." });
 
@@ -146,10 +160,17 @@ export async function getActivityById(req: Request, res: Response) {
 export async function deleteActivity(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    if (!id || id.length !== 24)
-      return res.status(400).json({ error: "Identifiant invalide." });
+    if (!id)
+      return res.status(400).json({ error: "Identifiant manquant." });
 
-    const activity = await Activity.findByIdAndDelete(id);
+    let activity: IActivity | null = null;
+
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      activity = await Activity.findByIdAndDelete(id);
+    } else {
+      activity = await Activity.findOneAndDelete({ _id: id });
+    }
+
     if (!activity)
       return res.status(404).json({ error: "Activité non trouvée." });
 

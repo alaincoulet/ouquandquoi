@@ -5,14 +5,16 @@
 // - Props : icône, label, état actif, callback clic, classe perso
 // ==========================================================
 
-import React, { ReactNode } from 'react'
+import React from 'react'
 
 interface FilterButtonProps {
-  icon: ReactNode                     // Icône à gauche (ex : <MapPinIcon />)
-  label: string                       // Libellé affiché (ex : "Où ?")
-  isActive?: boolean                  // État sélectionné (bordure verte)
-  onClick?: () => void                // Callback clic
-  className?: string                  // Classes CSS additionnelles
+  icon: React.ReactNode
+  label: string
+  isActive?: boolean
+  onClick?: () => void
+  className?: string
+  ariaLabel?: string
+  rightSlot?: React.ReactNode
 }
 
 const FilterButton: React.FC<FilterButtonProps> = ({
@@ -20,22 +22,32 @@ const FilterButton: React.FC<FilterButtonProps> = ({
   label,
   isActive = false,
   onClick,
-  className = ''
+  className = '',
+  ariaLabel,
+  rightSlot
 }) => {
-  const base =
-    'inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-green-400 transition text-sm'
-
+  // === ÉTAT (useState, useEffect, useContext, etc.) ===
   const activeStyle = 'border-green-500 bg-green-50'
   const inactiveStyle = 'border-gray-200 bg-white'
 
+  // === COMPORTEMENT (fonctions, callbacks, logique métier) ===
+  const handleClick = () => {
+    onClick?.()
+  }
+
+  // === AFFICHAGE (rendu JSX, mapping état => UI) ===
   return (
     <button
       type="button"
-      onClick={onClick}
-      className={`${base} ${isActive ? activeStyle : inactiveStyle} ${className}`}
+      onClick={handleClick}
+      aria-label={ariaLabel}
+      className={`inline-flex items-center gap-3 px-4 py-2 rounded-lg border text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-green-400 transition text-sm ${isActive ? activeStyle : inactiveStyle} ${className}`}
     >
-      <span className="w-5 h-5 text-green-600">{icon}</span>
-      <span>{label}</span>
+      <span className="flex items-center gap-2">
+        <span className="w-5 h-5 text-green-600 flex items-center justify-center">{icon}</span>
+        <span>{label}</span>
+      </span>
+      {rightSlot && <span className="ml-2 flex items-center">{rightSlot}</span>}
     </button>
   )
 }
