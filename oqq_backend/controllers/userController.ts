@@ -8,8 +8,7 @@
  * - Reset password sécurisé (token/email)
  * - Mise à jour profil (pseudo/nom/prénom/mot de passe)
  * - Suppression de compte sécurisée
- * - Toutes les réponses excluent le mot de passe
- * - Prend en compte "motivation" pour validation admin
+ * - Validation admin : suspension, réactivation, suppression admin
  */
 
 import { Request, Response } from "express";
@@ -21,6 +20,7 @@ import crypto from "crypto";
 import { sendResetPasswordEmail } from "../utils/email";
 
 const JWT_SECRET = process.env.JWT_SECRET || "changeme!";
+
 
 /* ==========================================================
    === INSCRIPTION / CONNEXION ==============================
@@ -372,6 +372,59 @@ export async function deleteMe(req: Request, res: Response) {
     res.status(500).json({ error: "Erreur lors de la suppression du compte." });
   }
 }
+
+/* ==========================================================
+   === SUSPENSION / RÉACTIVATION / SUPPRESSION ADMIN ========
+   ========================================================== */
+
+/**
+ * Suspension ou réactivation d’un compte utilisateur (admin)
+ * PATCH /api/users/:userId/status
+ * Body: { status: "active" | "suspended" }
+ */
+export async function updateUserStatus(req: Request, res: Response) {
+  try {
+    const { userId } = req.params;
+    const { status } = req.body;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId))
+      return res.status(400).json({ message: "ID utilisateur invalide." });
+    if (!["active", "suspended"].includes(status))
+      return res.status(400).json({ message: "Statut invalide." });
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "Utilisateur non trouvé." });
+
+    user.status = status;
+    await user.save();
+
+    res.json({ message: `Statut utilisateur mis à jour: ${status}` });
+  } catch (err) {
+    console.error("Erreur updateUserStatus:", err);
+    res.status(500).json({ message: "Erreur serveur (update status)" });
+  }
+}
+
+/**
+ * Suppression définitive d’un utilisateur par un admin
+ * DELETE /api/users/:userId
+ */
+export async function deleteUserByAdmin(req: Request, res: Response) {
+  try {
+    const { userId } = req.params;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId))
+      return res.status(400).json({ message: "ID utilisateur invalide." });
+
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) return res.status(404).json({ message: "Utilisateur non trouvé." });
+
+    res.json({ message: "Utilisateur supprimé définitivement." });
+  } catch (err) {
+    console.error("Erreur deleteUserByAdmin:", err);
+    res.status(500).json({ message: "Erreur serveur (suppression utilisateur)" });
+  }
+}
+
+
 
 /* ==========================================================
    === CONSULTÉ RÉCEMMENT ==================================
@@ -732,3 +785,21 @@ export async function removeSavedSearch(req: Request, res: Response) {
     res.status(500).json({ error: "Erreur serveur (suppression recherche sauvegardée)" });
   }
 }
+
+/**
+ * Récupère la liste de tous les utilisateurs (admin only)
+ * GET /api/admin/all-users
+ */
+export async function getAllUsers(req: Request, res: Response) {
+  try {
+    // Sélection stricte pour sécurité RGPD (évite mot de passe etc.)
+    const users = await User.find({})
+      .select("email pseudo nom prenom motivation createdAt role status")
+      .sort({ createdAt: 1 });
+    res.json({ users });
+  } catch (err) {
+    console.error("Erreur getAllUsers:", err);
+    res.status(500).json({ message: "Erreur serveur (listing all users)" });
+  }
+}
+

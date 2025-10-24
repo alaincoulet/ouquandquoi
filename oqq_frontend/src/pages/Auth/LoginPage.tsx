@@ -65,6 +65,11 @@ export default function LoginPage() {
     }
   };
 
+  const handleRegister = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate("/register");
+  };
+
   // ==========================================================
   // === AFFICHAGE (rendu JSX, mapping état => UI) ============
   // ==========================================================
@@ -93,7 +98,6 @@ export default function LoginPage() {
             <label htmlFor="password" className="block mb-1 font-medium">
               Mot de passe
             </label>
-            {/* ==== Champ mot de passe avec icône œil native ==== */}
             <div className="relative">
               <input
                 id="password"
@@ -118,7 +122,6 @@ export default function LoginPage() {
                 <Icon name={showPassword ? "eyeOff" : "eye"} size="md" />
               </button>
             </div>
-            {/* ==== Fin champ mot de passe ==== */}
           </div>
 
           {error && (
@@ -140,6 +143,7 @@ export default function LoginPage() {
             {loading ? "Connexion..." : "Se connecter"}
           </button>
         </form>
+
         {/* Lien mot de passe oublié */}
         <div className="mt-4 text-center">
           <a
@@ -149,11 +153,21 @@ export default function LoginPage() {
             Mot de passe oublié&nbsp;?
           </a>
         </div>
-        <div className="mt-4 text-center text-sm text-gray-500">
-          Pas encore de compte ?{" "}
-          <a href="/register" className="text-blue-600 hover:underline">
+
+        {/* NOUVELLE SECTION INSCRIPTION */}
+        <div className="mt-10 mb-2">
+          <h2 className="text-xl font-semibold text-center text-gray-700">
+            Pas encore de compte&nbsp;?
+          </h2>
+        </div>
+        <div className="flex justify-center">
+          <button
+            onClick={handleRegister}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl py-2 font-semibold transition text-lg"
+            style={{ maxWidth: 260 }}
+          >
             S’inscrire
-          </a>
+          </button>
         </div>
       </div>
     </div>

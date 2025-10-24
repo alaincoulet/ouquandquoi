@@ -6,6 +6,7 @@
  * - Password recovery (secure)
  * - Favorites and recently viewed activities
  * - Admin/Moderator: validation of pending users
+ * - Admin: suspend/reactivate/delete users, all-users listing
  */
 
 import { Router } from "express";
@@ -29,11 +30,14 @@ import {
   getScheduledActivities,
   addScheduledActivity,
   updateScheduledActivity,
-  removeScheduledActivity
+  removeScheduledActivity,
+  updateUserStatus,
+  deleteUserByAdmin,
+  getAllUsers             // ✅ Ajout pour lister tous les users (admin)
 } from "../controllers/userController";
 
 import { verifyToken } from "../middleware/verifyToken";
-import { isAdminOrModerator } from "../middleware/isAdmin";
+import { isAdminOrModerator, isAdmin } from "../middleware/isAdmin";
 
 const router = Router();
 
@@ -41,92 +45,65 @@ const router = Router();
 // === AUTHENTICATION & USER MANAGEMENT =====================
 // ==========================================================
 
-// Register new user
 router.post("/register", registerUser);
-
-// Login user (returns JWT)
 router.post("/login", loginUser);
 
 // ==========================================================
 // === FAVORITES ============================================
 // ==========================================================
 
-// Get user's favorites (JWT required)
 router.get("/favorites", verifyToken, getFavorites);
-
-// Add an activity to favorites
 router.patch("/favorites/:activityId", verifyToken, addFavorite);
-
-// Remove an activity from favorites
 router.delete("/favorites/:activityId", verifyToken, removeFavorite);
 
 // ==========================================================
 // === PROFILE MANAGEMENT ===================================
 // ==========================================================
 
-// Update user profile (pseudo, name, password, etc.)
 router.patch("/profile", verifyToken, updateProfile);
-
-// Delete user account (self-delete)
 router.delete("/me", verifyToken, deleteMe);
 
 // ==========================================================
 // === PASSWORD RESET (SECURE) ==============================
 // ==========================================================
 
-// Request password reset (send email)
 router.post("/forgot-password", forgotPassword);
-
-// Reset password using token
 router.post("/reset-password", resetPassword);
 
 // ==========================================================
 // === ADMIN / MODERATOR ACCESS =============================
 // ==========================================================
 
-// List all users with status "pending"
 router.get("/pending", verifyToken, isAdminOrModerator, getPendingUsers);
-
-// Validate a pending user (change role to "user" or "advertiser")
 router.patch("/validate/:userId", verifyToken, isAdminOrModerator, validateUser);
+
+// --- NOUVELLES ROUTES ADMIN ---
+router.patch("/:userId/status", verifyToken, isAdmin, updateUserStatus);     // Suspend/re-activate
+router.delete("/:userId", verifyToken, isAdmin, deleteUserByAdmin);          // Delete (admin only)
+router.get("/admin/all-users", verifyToken, isAdmin, getAllUsers);           // ✅ Liste tous les users (admin only)
 
 // ==========================================================
 // === RECENTLY VIEWED ACTIVITIES ===========================
 // ==========================================================
 
-// Add an activity to the user's recently viewed list
 router.patch("/recently-viewed/:activityId", verifyToken, addRecentlyViewed);
-
-// Get the 10 most recently viewed activities
 router.get("/recently-viewed", verifyToken, getRecentlyViewed);
 
 // ==========================================================
 // === SAVED SEARCHES =======================================
 // ==========================================================
 
-// Get user's saved searches
 router.get("/saved-searches", verifyToken, getSavedSearches);
-
-// Add a new saved search (max 3)
 router.post("/saved-searches", verifyToken, addSavedSearch);
-
-// Remove a saved search by index
 router.delete("/saved-searches/:index", verifyToken, removeSavedSearch);
 
 // ==========================================================
 // === SCHEDULED ACTIVITIES (CALENDAR) ======================
 // ==========================================================
 
-// Get user's scheduled activities
 router.get("/scheduled-activities", verifyToken, getScheduledActivities);
-
-// Add a scheduled activity with reminders
 router.post("/scheduled-activities", verifyToken, addScheduledActivity);
-
-// Update a scheduled activity
 router.patch("/scheduled-activities/:index", verifyToken, updateScheduledActivity);
-
-// Remove a scheduled activity
 router.delete("/scheduled-activities/:index", verifyToken, removeScheduledActivity);
 
 export default router;
