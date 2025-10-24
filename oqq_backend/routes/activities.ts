@@ -2,78 +2,57 @@
  * oqq_backend/routes/activities.ts
  *
  * Routes Express pour la gestion des activités (oùquandquoi.fr)
- * - CRUD complet via Mongoose
- * - Relié au modèle Activity
+ * - Utilise le contrôleur activityController
  * - Utilisé par server.ts (app.use("/api/activities", activityRoutes))
  */
 
-import express, { Request, Response } from "express";
-import Activity from "../models/Activity";
+import express from "express";
+import { 
+  getAllActivities, 
+  getActivityById, 
+  addActivity, 
+  deleteActivity,
+  testExpiration
+} from "../controllers/activityController";
+import { verifyToken } from "../middleware/verifyToken";
+import { isAdvertiser } from "../middleware/isAdvertiser";
+import multer from "multer";
+import path from "path";
 
 const router = express.Router();
 
-// ==========================================================
-// === RÉCUPÉRER TOUTES LES ACTIVITÉS =======================
-// ==========================================================
-router.get("/", async (_req: Request, res: Response) => {
-  try {
-    const activities = await Activity.find();
-    res.json(activities);
-  } catch (err) {
-    res.status(500).json({ message: "Erreur lors du chargement des activités", error: err });
-  }
+// Configuration Multer pour l'upload d'images
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, "public/images/");
+  },
+  filename: (_req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname.replace(/\s+/g, "-").toLowerCase());
+  },
+});
+
+const upload = multer({
+  storage,
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (ext !== ".png" && ext !== ".jpg" && ext !== ".jpeg" && ext !== ".gif" && ext !== ".webp") {
+      return cb(new Error("Seules les images sont autorisées"));
+    }
+    cb(null, true);
+  },
 });
 
 // ==========================================================
-// === RÉCUPÉRER UNE ACTIVITÉ PAR ID ========================
+// === ROUTES PUBLIQUES =====================================
 // ==========================================================
-router.get("/:id", async (req: Request, res: Response) => {
-  try {
-    const activity = await Activity.findById(req.params.id);
-    if (!activity) return res.status(404).json({ message: "Activité non trouvée" });
-    res.json(activity);
-  } catch (err) {
-    res.status(500).json({ message: "Erreur lors du chargement de l’activité", error: err });
-  }
-});
+router.get("/", getAllActivities);                    // Liste des activités (avec filtre expired)
+router.get("/test-expiration", testExpiration);       // TEST - Endpoint de debug
+router.get("/:id", getActivityById);                  // Détail d'une activité
 
 // ==========================================================
-// === AJOUTER UNE NOUVELLE ACTIVITÉ ========================
+// === ROUTES PROTÉGÉES (ADVERTISER) ========================
 // ==========================================================
-router.post("/", async (req: Request, res: Response) => {
-  try {
-    const newActivity = new Activity(req.body);
-    const savedActivity = await newActivity.save();
-    res.status(201).json(savedActivity);
-  } catch (err) {
-    res.status(400).json({ message: "Erreur lors de la création de l’activité", error: err });
-  }
-});
-
-// ==========================================================
-// === METTRE À JOUR UNE ACTIVITÉ EXISTANTE =================
-// ==========================================================
-router.put("/:id", async (req: Request, res: Response) => {
-  try {
-    const updated = await Activity.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updated) return res.status(404).json({ message: "Activité non trouvée" });
-    res.json(updated);
-  } catch (err) {
-    res.status(400).json({ message: "Erreur lors de la mise à jour", error: err });
-  }
-});
-
-// ==========================================================
-// === SUPPRIMER UNE ACTIVITÉ ===============================
-// ==========================================================
-router.delete("/:id", async (req: Request, res: Response) => {
-  try {
-    const deleted = await Activity.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ message: "Activité non trouvée" });
-    res.json({ message: "Activité supprimée avec succès" });
-  } catch (err) {
-    res.status(500).json({ message: "Erreur lors de la suppression", error: err });
-  }
-});
+router.post("/", verifyToken, isAdvertiser, upload.single("image"), addActivity);  // Créer une activité
+router.delete("/:id", verifyToken, isAdvertiser, deleteActivity);                  // Supprimer une activité
 
 export default router;

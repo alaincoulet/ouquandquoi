@@ -58,7 +58,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (!token) return;
     setLoadingUsers(true);
-    fetch("/api/admin/all-users", {
+    fetch("/api/users/admin/all-users", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async (res) => {

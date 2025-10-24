@@ -18,15 +18,48 @@ import Activity, { IActivity } from "../models/Activity";
    ========================================================== */
 
 /**
- * Vérifie si une activité est expirée à partir de sa date
+ * Vérifie si une activité est expirée à partir du champ 'when'
+ * Format attendu : "DD/MM/YYYY" ou "DD/MM/YYYY - DD/MM/YYYY"
  */
-function isExpiredActivity(activityDate?: Date): boolean {
-  if (!activityDate) return false;
-  const endPlusOne = new Date(activityDate);
-  endPlusOne.setDate(endPlusOne.getDate() + 1);
+function isExpiredActivity(when?: string): boolean {
+  if (!when) return false;
+  
+  // Parser le champ 'when' pour extraire la date de fin
+  let endDateStr: string;
+  if (when.includes(' - ')) {
+    // Plage de dates : prendre la date de fin
+    const parts = when.split(' - ');
+    endDateStr = parts[1].trim();
+  } else {
+    // Date fixe
+    endDateStr = when.trim();
+  }
+  
+  // Parser la date au format DD/MM/YYYY
+  const [day, month, year] = endDateStr.split('/').map(Number);
+  if (!day || !month || !year) {
+    console.warn(`[EXPIR CHECK] Format de date invalide: ${when}`);
+    return false;
+  }
+  
+  // Créer la date de fin à minuit (heure locale)
+  const endDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+  
+  // Aujourd'hui à minuit (heure locale)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  return today >= endPlusOne;
+  
+  // Une activité est expirée si sa date de fin est strictement avant aujourd'hui
+  // (donc si aujourd'hui > endDate, pas >=)
+  const expired = today > endDate;
+  
+  // DEBUG TEMPORAIRE - Affichage détaillé
+  console.error(`[EXPIR CHECK] when="${when}" | parsed: day=${day} month=${month} year=${year}`);
+  console.error(`[EXPIR CHECK] endDate=${endDate.toISOString()} (${endDate.getTime()})`);
+  console.error(`[EXPIR CHECK] today=${today.toISOString()} (${today.getTime()})`);
+  console.error(`[EXPIR CHECK] today > endDate = ${today.getTime()} > ${endDate.getTime()} = ${expired}`);
+  
+  return expired;
 }
 
 /**
@@ -41,6 +74,26 @@ interface UploadRequest extends AuthRequest {
    ========================================================== */
 
 /**
+ * TEST - Endpoint de debug pour tester isExpiredActivity
+ */
+export async function testExpiration(req: Request, res: Response) {
+  const testDates = [
+    "17/09/2025", // Passé
+    "15/09/2025", // Passé
+    "03/10/2025", // Passé
+    "11/06/2026", // Futur
+    "10/06/2026 - 12/06/2026", // Futur
+  ];
+  
+  const results = testDates.map(when => ({
+    when,
+    expired: isExpiredActivity(when)
+  }));
+  
+  res.json({ results, today: new Date().toISOString() });
+}
+
+/**
  * Récupère la liste de toutes les activités
  */
 export async function getAllActivities(req: Request, res: Response) {
@@ -53,8 +106,8 @@ export async function getAllActivities(req: Request, res: Response) {
     // Filtrage selon expiration
     const filtered = activities.filter((a: IActivity) =>
       expiredParam === "true"
-        ? isExpiredActivity(a.date)
-        : !isExpiredActivity(a.date)
+        ? isExpiredActivity(a.when)
+        : !isExpiredActivity(a.when)
     );
 
     res.json({ activities: filtered });
