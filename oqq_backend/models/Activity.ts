@@ -14,17 +14,11 @@ export interface IActivity extends Document {
   description: string;
   category: string;
   subcategory?: string;
-  date: Date;
-  location: {
-    address: string;
-    city: string;
-    postalCode?: string;
-    coordinates?: {
-      lat: number;
-      lon: number;
-    };
-  };
-  imageUrl?: string;
+  when: string; // Date ou plage de dates au format string (ex: "05/07/2026" ou "10/06/2026 - 12/06/2026")
+  location: string; // Adresse complète (ex: "84000 Avignon")
+  lat?: number;
+  lon?: number;
+  image?: string; // Chemin de l'image (ex: "/images/xxx.jpg")
   website?: string;
   contactEmail?: string;
   contactAllowed?: boolean;
@@ -40,17 +34,11 @@ const ActivitySchema = new Schema<IActivity>(
     description: { type: String, required: true, trim: true },
     category: { type: String, required: true, trim: true },
     subcategory: { type: String, trim: true },
-    date: { type: Date, required: true },
-    location: {
-      address: { type: String, required: true },
-      city: { type: String, required: true },
-      postalCode: { type: String },
-      coordinates: {
-        lat: { type: Number },
-        lon: { type: Number },
-      },
-    },
-    imageUrl: { type: String },
+    when: { type: String, required: true }, // Date ou plage au format string
+    location: { type: String, required: true }, // Adresse complète
+    lat: { type: Number },
+    lon: { type: Number },
+    image: { type: String }, // Chemin de l'image
     website: { type: String },
     contactEmail: { type: String },
     contactAllowed: { type: Boolean, default: false },
@@ -61,7 +49,7 @@ const ActivitySchema = new Schema<IActivity>(
     },
     user: { type: Schema.Types.ObjectId, ref: "User", required: true }, // advertiser who owns the activity
   },
-  { timestamps: true }
+  { timestamps: true, strict: false }
 );
 
 export default model<IActivity>("Activity", ActivitySchema);

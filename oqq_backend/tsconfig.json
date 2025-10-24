@@ -6,5 +6,6 @@
     "strict": true,
     "outDir": "./dist"
   },
-  "include": ["server.ts"]
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }
