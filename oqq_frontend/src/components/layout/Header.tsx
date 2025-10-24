@@ -28,6 +28,7 @@ import { FilterWhenPanel } from '@/components/molecules/filters/FilterWhenPanel'
 import { FilterWhatPanel } from '@/components/molecules/filters/FilterWhatPanel'
 import SavedSearchesPanel from '@/components/molecules/SavedSearchesPanel'
 import MyScheduleCalendar from '@/components/organisms/MyScheduleCalendar'
+import FilterButton from '@/components/atoms/FilterButton'
 
 interface HeaderProps {
   onNavigate?: (navId: string, href: string) => void
@@ -92,18 +93,40 @@ const Header: React.FC<HeaderProps> = ({
     setActiveFilter(prev => (prev === filter ? null : filter))
   const handleClosePanel = () => setActiveFilter(null)
 
-  const handleClearWhere = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleClearWhere = () => {
     onWhereChange({ label: '', location: '', distance: undefined, lat: undefined, lon: undefined })
   }
-  const handleClearWhen = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleClearWhen = () => {
     onWhenChange('')
   }
-  const handleClearWhat = (e: React.MouseEvent) => {
-    e.stopPropagation()
+  const handleClearWhat = () => {
     onWhatChange({ ...value, keyword: '', excludedSubcategories: [] })
   }
+
+  const renderClearSlot = (
+    onClear: () => void,
+    ariaLabel: string
+  ) => (
+    <span
+      role="button"
+      tabIndex={0}
+      onClick={(event) => {
+        event.stopPropagation()
+        onClear()
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          event.stopPropagation()
+          onClear()
+        }
+      }}
+      aria-label={ariaLabel}
+      className="text-gray-400 hover:text-red-500 focus:outline-none"
+    >
+      <XMarkIcon className="w-4 h-4" />
+    </span>
+  )
 
   const toggleMenu = () => setMenuOpen(prev => !prev)
   const closeMenu = () => setMenuOpen(false)
@@ -168,29 +191,18 @@ const Header: React.FC<HeaderProps> = ({
             <div className="flex gap-2">
               {/* Filter: Où ? */}
               <div className="relative">
-                <button
-                  type="button"
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                    activeFilter === 'where'
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-200 bg-white'
-                  } text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-green-400 transition`}
-                  aria-label="Filtrer par lieu"
+                <FilterButton
+                  icon={<MapPinIcon className="w-5 h-5" />}
+                  label={formatAddressLabel()}
+                  ariaLabel="Filtrer par lieu"
+                  isActive={activeFilter === 'where'}
                   onClick={() => handleClick('where')}
-                >
-                  <MapPinIcon className="w-5 h-5 mr-1 text-green-600" />
-                  <span>{formatAddressLabel()}</span>
-                  {where.label && (
-                    <button
-                      type="button"
-                      aria-label="Effacer le filtre lieu"
-                      className="ml-2 text-gray-400 hover:text-red-500 focus:outline-none"
-                      onClick={handleClearWhere}
-                    >
-                      <XMarkIcon className="w-4 h-4" />
-                    </button>
-                  )}
-                </button>
+                  rightSlot={
+                    where.label
+                      ? renderClearSlot(handleClearWhere, 'Effacer le filtre lieu')
+                      : undefined
+                  }
+                />
                 {activeFilter === 'where' && (
                   <FilterWherePanel
                     value={where.label}
@@ -202,29 +214,18 @@ const Header: React.FC<HeaderProps> = ({
 
               {/* Filter: Quand ? */}
               <div className="relative">
-                <button
-                  type="button"
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                    activeFilter === 'when'
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-200 bg-white'
-                  } text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-green-400 transition`}
-                  aria-label="Filtrer par date"
+                <FilterButton
+                  icon={<CalendarIcon className="w-5 h-5" />}
+                  label={whenLabel}
+                  ariaLabel="Filtrer par date"
+                  isActive={activeFilter === 'when'}
                   onClick={() => handleClick('when')}
-                >
-                  <CalendarIcon className="w-5 h-5 mr-1 text-green-600" />
-                  <span>{whenLabel}</span>
-                  {when && when !== 'Toute l’année' && (
-                    <button
-                      type="button"
-                      aria-label="Effacer le filtre date"
-                      className="ml-2 text-gray-400 hover:text-red-500 focus:outline-none"
-                      onClick={handleClearWhen}
-                    >
-                      <XMarkIcon className="w-4 h-4" />
-                    </button>
-                  )}
-                </button>
+                  rightSlot={
+                    when && when !== 'Toute l’année'
+                      ? renderClearSlot(handleClearWhen, 'Effacer le filtre date')
+                      : undefined
+                  }
+                />
                 {activeFilter === 'when' && (
                   <FilterWhenPanel
                     value={when}
@@ -239,29 +240,18 @@ const Header: React.FC<HeaderProps> = ({
 
               {/* Filter: Quoi ? */}
               <div className="relative">
-                <button
-                  type="button"
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                    activeFilter === 'what'
-                      ? 'border-green-500 bg-green-50'
-                      : 'border-gray-200 bg-white'
-                  } text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-green-400 transition`}
-                  aria-label="Filtrer par mot-clé"
+                <FilterButton
+                  icon={<KeyIcon className="w-5 h-5" />}
+                  label={renderWhatLabel()}
+                  ariaLabel="Filtrer par mot-clé"
+                  isActive={activeFilter === 'what'}
                   onClick={() => handleClick('what')}
-                >
-                  <KeyIcon className="w-5 h-5 mr-1 text-green-600" />
-                  <span>{renderWhatLabel()}</span>
-                  {value.keyword && (
-                    <button
-                      type="button"
-                      aria-label="Effacer le filtre mot-clé"
-                      className="ml-2 text-gray-400 hover:text-red-500 focus:outline-none"
-                      onClick={handleClearWhat}
-                    >
-                      <XMarkIcon className="w-4 h-4" />
-                    </button>
-                  )}
-                </button>
+                  rightSlot={
+                    value.keyword
+                      ? renderClearSlot(handleClearWhat, 'Effacer le filtre mot-clé')
+                      : undefined
+                  }
+                />
                 {activeFilter === 'what' && (
                   <FilterWhatPanel
                     value={value}

@@ -46,7 +46,11 @@ api.interceptors.response.use(
 export const getActivities = async (): Promise<Activity[]> => {
   try {
     const response = await api.get('/api/activities')
-    return response.data.activities ?? response.data
+    const payload = response.data
+    if (Array.isArray(payload)) return payload
+    if (Array.isArray(payload?.activities)) return payload.activities
+    console.warn('Format inattendu pour getActivities:', payload)
+    return []
   } catch (error) {
     console.error('Erreur lors de la récupération des activités :', error)
     return []
@@ -61,7 +65,11 @@ export const getActivities = async (): Promise<Activity[]> => {
 export const getExpiredActivities = async (): Promise<Activity[]> => {
   try {
     const response = await api.get('/api/activities?expired=true')
-    return response.data.activities ?? response.data
+    const payload = response.data
+    if (Array.isArray(payload)) return payload
+    if (Array.isArray(payload?.activities)) return payload.activities
+    console.warn('Format inattendu pour getExpiredActivities:', payload)
+    return []
   } catch (error) {
     console.error('Erreur lors de la récupération des activités expirées :', error)
     return []
@@ -71,12 +79,16 @@ export const getExpiredActivities = async (): Promise<Activity[]> => {
 /**
  * Récupère une activité unique par son _id Mongo natif
  * GET /api/activities/:id
- * Retour attendu : { activity: Activity }
+ * Retour attendu : { activity: Activity }
  */
 export const getActivityById = async (id: string): Promise<Activity | null> => {
   try {
     const response = await api.get(`/api/activities/${id}`)
-    return response.data.activity ?? response.data
+    const payload = response.data
+    if (payload?.activity) return payload.activity
+    if (payload && typeof payload === 'object' && payload._id) return payload as Activity
+    console.warn('Format inattendu pour getActivityById:', payload)
+    return null
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'activité :', error)
     return null

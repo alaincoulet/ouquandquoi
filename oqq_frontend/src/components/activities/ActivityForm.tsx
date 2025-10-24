@@ -7,7 +7,8 @@
 import React, { useState, DragEvent, FormEvent, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import FilterButton from '@/components/atoms/FilterButton';
-import { MapPinIcon, CalendarIcon, KeyIcon, PhotoIcon } from '@heroicons/react/24/solid';
+import { MapPinIcon, CalendarIcon, KeyIcon } from '@heroicons/react/24/outline';
+import { PhotoIcon } from '@heroicons/react/24/solid';
 import { ActivityWherePanel } from "./ActivityWherePanel";
 import { FilterWhenPanel } from '@/components/molecules/filters/FilterWhenPanel';
 import { FilterWhatPanel } from '@/components/molecules/filters/FilterWhatPanel';
@@ -160,6 +161,7 @@ export default function ActivityForm() {
                 icon={<MapPinIcon className="w-5 h-5" />}
                 isActive={showWherePanel}
                 onClick={() => setShowWherePanel((v) => !v)}
+                ariaLabel="Choisir le lieu de l'activité"
               />
               {showWherePanel && (
                 <div className="absolute left-full top-0 z-30">
@@ -181,6 +183,7 @@ export default function ActivityForm() {
                 icon={<CalendarIcon className="w-5 h-5" />}
                 isActive={showWhenPanel}
                 onClick={() => setShowWhenPanel((v) => !v)}
+                ariaLabel="Choisir la date ou période de l'activité"
               />
               {showWhenPanel && (
                 <div className="absolute left-full top-0 z-30">
@@ -198,6 +201,7 @@ export default function ActivityForm() {
                 icon={<KeyIcon className="w-5 h-5" />}
                 isActive={showWhatPanel}
                 onClick={() => setShowWhatPanel((v) => !v)}
+                ariaLabel="Choisir ce que décrit l'activité"
               />
               {showWhatPanel && (
                 <div className="absolute left-full top-0 z-30">
